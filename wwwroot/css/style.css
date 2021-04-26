@@ -1,2 +1,11 @@
 ﻿body {
 }
+
+#paste-input {
+    resize: none;
+    min-height: 10em;
+    overflow-wrap: break-word;
+    outline: none;
+    border-color: var(--bs-light);
+    box-shadow: none;
+}

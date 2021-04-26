@@ -21,5 +21,9 @@ namespace devbin.Pages
         {
 
         }
+
+        public void OnPost() {
+            Console.WriteLine("hi");
+        }
     }
 }

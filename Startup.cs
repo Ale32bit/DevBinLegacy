@@ -19,13 +19,16 @@ namespace devbin {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             services.AddRazorPages();
-            services.AddMvc().AddRazorRuntimeCompilation();
+            var mvc = services.AddMvc();
+            mvc.AddRazorRuntimeCompilation();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
             if ( env.IsDevelopment() ) {
                 app.UseDeveloperExceptionPage();
+                //app.UseStatusCodePagesWithReExecute("/Error", "?code={0}");
             } else {
                 app.UseExceptionHandler("/Error");
             }

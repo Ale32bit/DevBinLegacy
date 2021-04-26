@@ -8,11 +8,13 @@
     <div class="row">
 
         <div class="col-sm-8">
-            <textarea id="paste-input" class="form-control" placeholder="<your code />" style="resize: none; height: 10em;"></textarea>
+            <textarea id="paste-input" class="form-control bg-dark text-light outline-danger"
+                      placeholder="<code> ... </code>" wrap="soft"
+                      onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()"></textarea>
         </div>
 
         <div class="col-sm-4">
-            <p>Test2</p>
+            <p>paste options go here</p>
         </div>
     </div>
 </form>
