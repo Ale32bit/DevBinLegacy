@@ -1,10 +1,20 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = null;
 }
 
-<div class="text-center">
-    <h1>Hello, world!</h1>
-    <p>The time on the server is @DateTime.Now</p>
-</div>
+<form>
+    <div class="row">
+
+        <div class="col-sm-8">
+            <textarea id="paste-input" class="form-control" placeholder="<your code />" style="resize: none; height: 10em;"></textarea>
+        </div>
+
+        <div class="col-sm-4">
+            <p>Test2</p>
+        </div>
+    </div>
+</form>
+
+<script src="~/js/index.js" type="text/javascript"></script>
