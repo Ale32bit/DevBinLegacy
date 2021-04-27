@@ -20,29 +20,28 @@
 <body class="bg-dark text-light">
 
     <div class="container">
-
-
-        <header class="p-3 bg-dark text-white">
-            <div class="container">
-                <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
-                    <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
-                        <img src="~/brand.png" class="bi me-2" height="48">
-                        <h3>/dev/bin</h3>
-                    </a>
-
-                    <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0 ms-4">
-                        <li><a href="/" class="btn btn-light me-2" role="button"><i class="fas fa-plus"></i> New Paste</a></li>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="/">
+                    <img src="~/brand.png" class="bi me-2 d-inline-block" height="48">
+                    <h3 class="d-inline-block">/dev/bin</h3>
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbar">
+                    <ul class="navbar-nav me-sm-2 me-md-auto me-auto mb-2 mb-lg-0">
+                        <li><a href="/" class="btn btn-light me-2 mb-sm-2 mb-lg-auto" role="button"><i class="fas fa-plus"></i> New Paste</a></li>
                         <li><a href="/latest" class="btn btn-outline-light" role="button"><i class="fas fa-list-ul"></i> Latest Pastes</a></li>
-                    </ul>
 
-                    <div class="text-end">
+                    </ul>
+                    <div class="d-flex">
                         <a href="/login" class="btn btn-outline-light me-2" role="button"><i class="fas fa-sign-in-alt"></i> Login</a>
                         <a href="/signup" class="btn btn-light" role="button"><i class="fas fa-user-plus"></i> Sign Up</a>
-
                     </div>
                 </div>
             </div>
-        </header>
+        </nav>
 
         @RenderBody()
 

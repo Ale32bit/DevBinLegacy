@@ -40,7 +40,6 @@ namespace devbin.Pages {
                     + statusCodeReExecuteFeature.OriginalQueryString;
             }
 
-            _logger.LogWarning($"Error: {code} {OriginalURL}");
         }
     }
 }
