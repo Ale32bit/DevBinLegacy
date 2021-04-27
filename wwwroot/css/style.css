@@ -4,6 +4,7 @@
 #paste-input {
     resize: none;
     min-height: 10em;
+    max-height: 75vh;
     overflow-wrap: break-word;
     outline: none;
     border-color: var(--bs-light);

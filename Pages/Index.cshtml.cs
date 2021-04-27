@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 
-namespace devbin.Pages
+namespace DevBin.Pages
 {
     public class IndexModel : PageModel
     {
@@ -22,7 +22,7 @@ namespace devbin.Pages
 
         }
 
-        public void OnPost() {
+        public void OnPostAsync() {
             Console.WriteLine("hi");
         }
     }
