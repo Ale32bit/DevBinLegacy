@@ -2,13 +2,14 @@
 @model IndexModel
 @{
     ViewData["Title"] = null;
+    ViewData["IncludeHighlight"] = true;
 }
 
-<form>
+<form method="post" asp-action="Index">
     <div class="row">
 
         <div class="col-sm-8">
-            <textarea id="paste-input" class="form-control bg-dark text-light font-monospace"
+            <textarea id="paste-input" name="paste-input" class="form-control bg-dark text-light font-monospace"
                       placeholder="<code> /dev/bin </code>" wrap="soft" required=""
                       onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()"></textarea>
         </div>
@@ -22,9 +23,6 @@
                 <div class="col-6">
                     <label for="paste-syntax" class="form-label">Paste Syntax</label>
                     <select id="paste-syntax" name="paste-syntax" class="form-select bg-dark text-light">
-                        <option value="plaintext">Plain Text</option>
-                        <option value="plaintext">Plain Text</option>
-                        <option value="plaintext">Plain Text</option>
                     </select>
                 </div>
             </div>
@@ -33,9 +31,10 @@
                 <div class="col-6">
                     <label for="paste-exposure" class="form-label">Paste Exposure</label>
                     <select id="paste-exposure" name="paste-exposure" class="form-select bg-dark text-light">
-                        <option value="public">Public</option>
-                        <option value="unlisted">Unlisted</option>
-                        <option value="private">Private</option>
+                        <option value="0">Public</option>
+                        <option value="1">Unlisted</option>
+                        <option value="2">Private</option>
+                        <option value="3">Encrypted</option>
                     </select>
                 </div>
                 <div class="col-6">
