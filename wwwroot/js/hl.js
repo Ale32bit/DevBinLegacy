@@ -19,11 +19,15 @@ langs.forEach(name => {
     syntaxList.appendChild(optionNode);
 });
 
-function highlight(id) {
+function highlight() {
     addEventListener('load', () => {
         const code = document.getElementById(id);
+
+
+
         const worker = new Worker('~/js/hl-worker.js');
         worker.onmessage = (event) => { code.innerHTML = event.data; }
-        worker.postMessage(code.textContent);
+        worker.postMessage({
+        });
     });
 }

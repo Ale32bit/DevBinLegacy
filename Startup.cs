@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Routing.Patterns;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,6 +19,9 @@ namespace DevBin {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             services.AddRazorPages();
+            services.AddRouting(options => {
+                options.ConstraintMap.Add("regexRouter", typeof(RegexConstraint));
+            });
             var mvc = services.AddMvc();
             mvc.AddRazorRuntimeCompilation();
 
