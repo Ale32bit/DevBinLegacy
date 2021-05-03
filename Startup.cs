@@ -22,6 +22,7 @@ namespace DevBin {
 
             // Pastes transformer
             services.AddTransient<PasteTransformer>();
+            services.AddTransient<RawTransformer>();
 
 
             var mvc = services.AddMvc();
@@ -51,6 +52,7 @@ namespace DevBin {
             app.UseEndpoints(endpoints => {
                 endpoints.MapRazorPages();
                 endpoints.MapDynamicPageRoute<PasteTransformer>(@"{pasteId:regex(^[A-Za-z]{{8}})}");
+                endpoints.MapDynamicPageRoute<RawTransformer>(@"raw/{pasteId:regex(^[A-Za-z{{8}}])}");
             });
         }
     }

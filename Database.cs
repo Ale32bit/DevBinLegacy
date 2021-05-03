@@ -20,7 +20,8 @@ namespace DevBin {
             using ( MySqlConnection conn = GetConnection() ) {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = '{ MySqlHelper.EscapeString(id) }';", conn);
+                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = @id;", conn);
+                cmd.Parameters.AddWithValue("@id", id);
                 using ( var reader = cmd.ExecuteReader() ) {
                     if ( reader.Read() ) {
                         paste = new Paste() {

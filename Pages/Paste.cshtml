@@ -5,45 +5,47 @@
     ViewData["IncludeHighlight"] = true;
 }
 
-<form method="post" asp-action="Clone">
-    <div class="row">
+<div class="row">
 
-        <div class="col-sm-8">
-            <div id="paste-content" name="paste-input" class="form-control bg-dark text-light font-monospace codeblock">@Model.PasteContent</div>
+    <div class="col-sm-8">
+        <div id="paste-content" name="paste-input" class="form-control bg-dark text-light font-monospace codeblock">@Model.PasteContent</div>
+    </div>
+
+    <div class="col-sm-4">
+        <div class="row">
+            <div class="col-6">
+                <label for="paste-title" class="form-label">Paste Title</label>
+                <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" value="@Model.Paste.Title" readonly />
+            </div>
+            <div class="col-6">
+                <label for="paste-syntax" class="form-label">Paste Syntax</label>
+                <input id="paste-syntax" name="paste-syntax" class="form-control bg-dark text-light" value="@Model.Paste.Syntax" readonly />
+            </div>
         </div>
 
-        <div class="col-sm-4">
-            <div class="row">
-                <div class="col-6">
-                    <label for="paste-title" class="form-label">Paste Title</label>
-                    <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" value="@Model.Paste.Title" readonly />
-                </div>
-                <div class="col-6">
-                    <label for="paste-syntax" class="form-label">Paste Syntax</label>
-                    <input id="paste-syntax" name="paste-syntax" class="form-control bg-dark text-light" value="@Model.Paste.Syntax" readonly />
-                </div>
+        <div class="row pt-2">
+            <div class="col-6">
+                <label for="paste-exposure" class="form-label">Paste Exposure</label>
+                <input id="paste-exposure" name="paste-exposure" class="form-control bg-dark text-light" value="@Model.PasteExposure" readonly>
             </div>
-
-            <div class="row pt-2">
-                <div class="col-6">
-                    <label for="paste-exposure" class="form-label">Paste Exposure</label>
-                    <input id="paste-exposure" name="paste-exposure" class="form-control bg-dark text-light" value="@Model.PasteExposure" readonly>
-                </div>
-                <div class="col-6">
-                    <label class="form-label user-select-none">&emsp;</label>
-                    <button type="submit" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</button>
-                </div>
+            <div class="col-6">
+                <label class="form-label user-select-none">&emsp;</label>
+                <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</a>
             </div>
+        </div>
 
-            <div class="row pt-2">
-                <div class="col-6 offset-6">
-                    <label class="form-label user-select-none">&emsp;</label>
-                    <button type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Clone Paste</button>
-                </div>
+        <div class="row pt-2">
+            <div class="col-6">
+                <label class="form-label user-select-none">&emsp;</label>
+                <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+            </div>
+            <div class="col-6">
+                <label class="form-label user-select-none">&emsp;</label>
+                <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Clone Paste</a>
             </div>
         </div>
     </div>
-</form>
+</div>
 
 <script>
     addEventListener('load', () => {

@@ -11,17 +11,29 @@ namespace DevBin.Pages {
     public class IndexModel : PageModel {
         private readonly ILogger<IndexModel> _logger;
 
-        public bool IsPost;
+        public bool IsCloning { get; set; }
+        public Paste? Clone { get; set; }
+        public string CloneContent { get; set; }
 
         public IndexModel(ILogger<IndexModel> logger) {
             _logger = logger;
         }
 
         public void OnGet() {
+            if(HttpContext.Request.Query.ContainsKey("clone")) {
+                Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
+                PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
+
+                Clone = database.FetchPaste(HttpContext.Request.Query["clone"]);
+                if(Clone != null) {
+                    IsCloning = true;
+                    CloneContent = pasteFs.Read(Clone.ID);
+                }
+
+            }
         }
 
         public void OnPost() {
-            IsPost = true;
             Paste paste = new();
 
             paste.Title = Request.Form.ContainsKey("paste-title") ? Request.Form["paste-title"] : "Unnamed Paste";

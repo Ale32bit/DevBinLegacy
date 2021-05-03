@@ -1,7 +1,7 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = null;
+    ViewData["Title"] = Model.IsCloning ? "Cloning " + Model.Clone.ID : null;
     ViewData["IncludeHighlight"] = true;
 }
 
@@ -11,7 +11,7 @@
         <div class="col-sm-8">
             <textarea id="paste-input" name="paste-input" class="form-control bg-dark text-light font-monospace"
                       placeholder="<code> /dev/bin </code>" wrap="soft" required=""
-                      onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()"></textarea>
+                      onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()">@(Model.IsCloning ? Model.CloneContent : "")</textarea>
         </div>
 
         <div class="col-sm-4">
@@ -23,7 +23,13 @@
                 <div class="col-6">
                     <label for="paste-syntax" class="form-label">Paste Syntax</label>
                     <select id="paste-syntax" name="paste-syntax" class="form-select bg-dark text-light">
-                        <option value="plaintext" selected>None</option>
+                        @{
+                            if ( Model.IsCloning ) {
+                                <option value="@Model.Clone.Syntax" selected>@Model.Clone.Syntax</option>
+                            } else {
+                                <option value="plaintext" selected>None</option>
+                            }
+                        }
                     </select>
                 </div>
             </div>

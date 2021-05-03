@@ -20,3 +20,17 @@
     border-color: var(--bs-light);
     box-shadow: none;
 }
+
+.locked {
+    background-image: url("/lock.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 128px;
+}
+
+.unlocked {
+    background-image: url("/lock-open.png");
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: 128px;
+}
