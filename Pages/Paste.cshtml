@@ -1,49 +1,73 @@
 ﻿@page
 @model PasteModel
 @{
-    ViewData["Title"] = null;
+    ViewData["Title"] = Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID;
     ViewData["IncludeHighlight"] = true;
 }
 
-<form method="post" asp-action="Index">
+<form method="post" asp-action="Clone">
     <div class="row">
 
         <div class="col-sm-8">
-            <textarea id="paste-input" name="paste-input" class="form-control bg-dark text-light font-monospace"
-                      placeholder="<code> /dev/bin </code>" wrap="soft" required=""
-                      onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()"></textarea>
+            <div id="paste-content" name="paste-input" class="form-control bg-dark text-light font-monospace codeblock">@Model.PasteContent</div>
         </div>
 
         <div class="col-sm-4">
             <div class="row">
                 <div class="col-6">
                     <label for="paste-title" class="form-label">Paste Title</label>
-                    <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" />
+                    <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" value="@Model.Paste.Title" readonly />
                 </div>
                 <div class="col-6">
                     <label for="paste-syntax" class="form-label">Paste Syntax</label>
-                    <select id="paste-syntax" name="paste-syntax" class="form-select bg-dark text-light">
-                    </select>
+                    <input id="paste-syntax" name="paste-syntax" class="form-control bg-dark text-light" value="@Model.Paste.Syntax" readonly />
                 </div>
             </div>
 
             <div class="row pt-2">
                 <div class="col-6">
                     <label for="paste-exposure" class="form-label">Paste Exposure</label>
-                    <select id="paste-exposure" name="paste-exposure" class="form-select bg-dark text-light">
-                        <option value="0">Public</option>
-                        <option value="1">Unlisted</option>
-                        <option value="2">Private</option>
-                        <option value="3">Encrypted</option>
-                    </select>
+                    <input id="paste-exposure" name="paste-exposure" class="form-control bg-dark text-light" value="@Model.PasteExposure" readonly>
                 </div>
                 <div class="col-6">
                     <label class="form-label user-select-none">&emsp;</label>
-                    <button type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Create Paste</button>
+                    <button type="submit" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</button>
+                </div>
+            </div>
+
+            <div class="row pt-2">
+                <div class="col-6 offset-6">
+                    <label class="form-label user-select-none">&emsp;</label>
+                    <button type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Clone Paste</button>
                 </div>
             </div>
         </div>
     </div>
 </form>
 
-<script src="~/js/index.js" type="text/javascript"></script>
+<script>
+    addEventListener('load', () => {
+        const code = document.getElementById("paste-content");
+        const syntax = document.getElementById("paste-syntax")
+
+        syntaxId = syntax.value;
+
+        try {
+            syntax.value = hljs.getLanguage(syntaxId).name;
+
+            const worker = new Worker('/js/hl-worker.js');
+            worker.onmessage = (event) => {
+                code.innerHTML = event.data;
+            }
+            worker.postMessage({
+                code: code.innerText,
+                language: syntaxId,
+            });
+        } catch (e) {
+            console.error(e);
+            syntax.value = syntaxId;
+            syntax.classList.add("bg-danger")
+            syntax.classList.remove("bg-dark")
+        }
+    });
+</script>

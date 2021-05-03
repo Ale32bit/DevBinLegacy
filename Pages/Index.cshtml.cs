@@ -23,12 +23,12 @@ namespace DevBin.Pages {
         public void OnPost() {
             IsPost = true;
             Paste paste = new();
-            
+
             paste.Title = Request.Form.ContainsKey("paste-title") ? Request.Form["paste-title"] : "Unnamed Paste";
             paste.Syntax = Request.Form.ContainsKey("paste-syntax") ? Request.Form["paste-syntax"] : "plaintext";
             paste.Exposure = PasteExposure.Public;
             if ( int.TryParse(Request.Form["paste-exposure"].ToString(), out var exp) ) {
-                switch(exp) {
+                switch ( exp ) {
                     case 0:
                     default:
                         paste.Exposure = PasteExposure.Public;
@@ -47,9 +47,16 @@ namespace DevBin.Pages {
 
             paste.Date = DateTime.Now;
 
+            Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
+            PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
 
+            var id = database.Upload(paste);
 
             string content = Request.Form["paste-input"];
+
+            pasteFs.Write(id, content);
+
+            HttpContext.Response.Redirect(id);
         }
     }
 }

@@ -10,3 +10,13 @@
     border-color: var(--bs-light);
     box-shadow: none;
 }
+
+#paste-content {
+    overflow: auto;
+    overflow-wrap: normal;
+    white-space: pre;
+    min-height: 10em;
+    outline: none;
+    border-color: var(--bs-light);
+    box-shadow: none;
+}

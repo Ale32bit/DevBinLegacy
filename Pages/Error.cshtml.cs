@@ -17,6 +17,7 @@ namespace DevBin.Pages {
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
         public string ErrorStatusCode { get; set; }
+        public string ErrorDescription { get; set; }
         public string OriginalURL { get; set; }
         public bool ShowOriginalURL => !string.IsNullOrEmpty(OriginalURL);
 

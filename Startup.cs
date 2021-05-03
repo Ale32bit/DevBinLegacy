@@ -19,11 +19,16 @@ namespace DevBin {
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
             services.AddRazorPages();
-            services.AddRouting(options => {
-                options.ConstraintMap.Add("regexRouter", typeof(RegexConstraint));
-            });
+
+            // Pastes transformer
+            services.AddTransient<PasteTransformer>();
+
+
             var mvc = services.AddMvc();
             mvc.AddRazorRuntimeCompilation();
+
+            services.Add(new ServiceDescriptor(typeof(Database), new Database(Configuration.GetConnectionString("Database"))));
+            services.Add(new ServiceDescriptor(typeof(PasteFs), new PasteFs(Configuration.GetValue<string>("DataPath"), Configuration.GetValue<bool>("UseCompression"))));
 
         }
 
@@ -45,6 +50,7 @@ namespace DevBin {
 
             app.UseEndpoints(endpoints => {
                 endpoints.MapRazorPages();
+                endpoints.MapDynamicPageRoute<PasteTransformer>(@"{pasteId:regex(^[A-Za-z]{{8}})}");
             });
         }
     }
