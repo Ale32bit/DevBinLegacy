@@ -50,43 +50,72 @@
     </div>
 </div>
 
-<script src="~/js/highlight.pack.js"></script>
+@section Scripts {
 
-<script>
-    addEventListener('load', () => {
-        const code = document.getElementById("paste-content");
-        const syntax = document.getElementById("paste-syntax")
+    <script src="~/js/highlight.pack.js"></script>
 
-        syntaxId = syntax.value;
-
-        try {
-            syntax.value = hljs.getLanguage(syntaxId).name;
-
-            const worker = new Worker('/js/hl-worker.js');
-            worker.onmessage = (event) => {
-                code.innerHTML = event.data;
-            }
-            worker.postMessage({
-                code: code.innerText,
-                language: syntaxId,
-            });
-        } catch (e) {
-            console.error(e);
-            syntax.value = syntaxId;
-        }
-    });
-</script>
-
-@if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js" integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A==" crossorigin="anonymous"></script>
-    <script src="~/js/aes.js" type="text/javascript"></script>
     <script>
-        let key = prompt("This paste is encrypted and requires a key!\nType the password:");
-        let pasteContent = document.getElementById("paste-content");
-        if (typeof key === "string") {
-            let res = decrypt(pasteContent.textContent, key);
-            pasteContent.textContent = res;
-            pasteContent.classList.remove("locked");
-        }
+        addEventListener('load', () => {
+            const code = document.getElementById("paste-content");
+            const syntax = document.getElementById("paste-syntax")
+
+            syntaxId = syntax.value;
+
+            try {
+                syntax.value = hljs.getLanguage(syntaxId).name;
+
+                const worker = new Worker('/js/hl-worker.js');
+                worker.onmessage = (event) => {
+                    code.innerHTML = event.data;
+                }
+                worker.postMessage({
+                    code: code.innerText,
+                    language: syntaxId,
+                });
+            } catch (e) {
+                console.error(e);
+                syntax.value = syntaxId;
+            }
+        });
     </script>
+
+    @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {
+        <div class="modal fade" id="unlock-modal" tabindex="-1" aria-labelledby="unlockLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="unlockLabel"><i class="fas fa-lock"></i> Encrypted Paste!</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>This paste is encrypted and requires a key to be readable.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <input id="paste-key" name="paste-key" type="password" class="form-control bg-dark text-light" placeholder="Paste key..." />
+                        <button type="button" class="btn btn-primary"><i class="fas fa-unlock"></i> Decrypt</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js" integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A==" crossorigin="anonymous"></script>
+        <script src="~/js/aes.js" type="text/javascript"></script>
+        <script>
+
+
+            let modal = new bootstrap.Modal(document.getElementById('unlock-modal'), {})
+            modal.show();
+
+
+
+
+            /*let pasteContent = document.getElementById("paste-content");
+            if (typeof key === "string") {
+                let res = decrypt(pasteContent.textContent, key);
+                pasteContent.textContent = res;
+                pasteContent.classList.remove("locked");
+            }*/
+        </script>
+    }
 }
