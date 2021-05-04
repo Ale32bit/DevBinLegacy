@@ -8,44 +8,49 @@
 <div class="row">
 
     <div class="col-sm-8">
-        <div id="paste-content" name="paste-input" class="form-control bg-dark text-light font-monospace codeblock">@Model.PasteContent</div>
+        <label for="paste-input" class="form-label">@Model.Paste.Title</label>
+        <div id="paste-content" name="paste-input" class="form-control bg-dark text-light font-monospace codeblock @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
     </div>
 
     <div class="col-sm-4">
         <div class="row">
             <div class="col-6">
-                <label for="paste-title" class="form-label">Paste Title</label>
-                <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" value="@Model.Paste.Title" readonly />
-            </div>
-            <div class="col-6">
                 <label for="paste-syntax" class="form-label">Paste Syntax</label>
                 <input id="paste-syntax" name="paste-syntax" class="form-control bg-dark text-light" value="@Model.Paste.Syntax" readonly />
             </div>
-        </div>
-
-        <div class="row pt-2">
             <div class="col-6">
                 <label for="paste-exposure" class="form-label">Paste Exposure</label>
                 <input id="paste-exposure" name="paste-exposure" class="form-control bg-dark text-light" value="@Model.PasteExposure" readonly>
             </div>
-            <div class="col-6">
-                <label class="form-label user-select-none">&emsp;</label>
-                <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</a>
-            </div>
         </div>
 
         <div class="row pt-2">
             <div class="col-6">
                 <label class="form-label user-select-none">&emsp;</label>
-                <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+                <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</a>
             </div>
             <div class="col-6">
                 <label class="form-label user-select-none">&emsp;</label>
                 <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Clone Paste</a>
             </div>
         </div>
+
+        @if ( HttpContext.Request.RouteValues["LoggedIn"] != null ) {
+            <div class="row pt-2">
+                <div class="col-6">
+                    <label class="form-label user-select-none">&emsp;</label>
+                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light"><i class="fas fa-edit"></i> Edit Paste</a>
+                </div>
+                <div class="col-6">
+                    <label class="form-label user-select-none">&emsp;</label>
+                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+                </div>
+            </div>
+        }
     </div>
 </div>
+
+<script src="~/js/highlight.pack.js"></script>
 
 <script>
     addEventListener('load', () => {
@@ -68,8 +73,20 @@
         } catch (e) {
             console.error(e);
             syntax.value = syntaxId;
-            syntax.classList.add("bg-danger")
-            syntax.classList.remove("bg-dark")
         }
     });
 </script>
+
+@if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js" integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A==" crossorigin="anonymous"></script>
+    <script src="~/js/aes.js" type="text/javascript"></script>
+    <script>
+        let key = prompt("This paste is encrypted and requires a key!\nType the password:");
+        let pasteContent = document.getElementById("paste-content");
+        if (typeof key === "string") {
+            let res = decrypt(pasteContent.textContent, key);
+            pasteContent.textContent = res;
+            pasteContent.classList.remove("locked");
+        }
+    </script>
+}

@@ -27,10 +27,3 @@
     background-repeat: no-repeat;
     background-size: 128px;
 }
-
-.unlocked {
-    background-image: url("/lock-open.png");
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-size: 128px;
-}

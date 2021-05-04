@@ -15,7 +15,6 @@ namespace DevBin.Pages {
     public class ErrorModel : PageModel {
         public string RequestId { get; set; }
         public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
-
         public string ErrorStatusCode { get; set; }
         public string ErrorDescription { get; set; }
         public string OriginalURL { get; set; }
@@ -31,6 +30,10 @@ namespace DevBin.Pages {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
             ErrorStatusCode = code;
+
+            if(HttpContext.Request.RouteValues.ContainsKey("ErrorDescription")) {
+                ErrorDescription = (string)HttpContext.Request.RouteValues["ErrorDescription"];
+            }
 
             var statusCodeReExecuteFeature = HttpContext.Features.Get<
                                                    IStatusCodeReExecuteFeature>();

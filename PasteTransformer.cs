@@ -18,10 +18,13 @@ namespace DevBin {
 
                 Paste? paste = database.FetchPaste(pasteId);
 
+                values.Remove("ErrorDescription");
+
                 if ( paste != null ) {
                     values["paste"] = paste;
                     values["page"] = "/Paste";
                 } else {
+                    values["ErrorDescription"] = "Paste not found";
                     values["page"] = "/Error";
                 }
 

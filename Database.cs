@@ -37,25 +37,30 @@ namespace DevBin {
             return paste;
         }
 
-        public bool Exists(string id) {
-            using ( MySqlConnection conn = GetConnection() ) {
+        public bool Exists(string id, MySqlConnection conn) {
+            if ( conn.State != System.Data.ConnectionState.Open ) {
                 conn.Open();
+            }
 
-                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = '{MySqlHelper.EscapeString(id)}';", conn);
-                using ( var reader = cmd.ExecuteReader() ) {
-                    return reader.HasRows;
-                }
+            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = '{MySqlHelper.EscapeString(id)}';", conn);
+            using ( var reader = cmd.ExecuteReader() ) {
+                return reader.HasRows;
             }
         }
 
-        public string Upload(Paste paste) {
-            string id = RandomID();
-            while ( Exists(id) ) {
-                id = RandomID();
-            }
+        public bool Exists(string id) {
+            MySqlConnection conn = GetConnection();
+            return Exists(id, conn);
+        }
 
+        public string Upload(Paste paste) {
+            string id;
             using ( MySqlConnection conn = GetConnection() ) {
                 conn.Open();
+
+                do {
+                    id = RandomID();
+                } while ( Exists(id, conn) );
 
                 MySqlCommand cmd = new MySqlCommand(@"INSERT INTO `pastes` (
                     `id`, `authorId`, `title`, `syntax`, `exposure`
