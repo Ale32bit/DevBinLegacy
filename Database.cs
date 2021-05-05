@@ -85,6 +85,10 @@ namespace DevBin {
 
         public string Upload(Paste paste) {
             string id;
+
+            paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
+            paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
+
             using ( MySqlConnection conn = GetConnection() ) {
                 conn.Open();
 
@@ -107,7 +111,6 @@ namespace DevBin {
                 int affected = cmd.ExecuteNonQuery();
                 conn.Close();
             }
-
 
             return id;
         }

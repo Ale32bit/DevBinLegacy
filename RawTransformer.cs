@@ -17,7 +17,7 @@ namespace DevBin {
                 Database database = httpContext.RequestServices.GetService(typeof(Database)) as Database;
                 PasteFs pasteFs = httpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
 
-                Paste? paste = database.FetchPaste(pasteId);
+                Paste paste = database.FetchPaste(pasteId);
                 httpContext.Response.ContentType = "text/plain; charset=UTF-8";
                 if ( paste != null && paste.Exposure == Paste.PasteExposure.Public || paste.Exposure == Paste.PasteExposure.Unlisted ) {
                     string pasteContent = pasteFs.Read(paste.ID);

@@ -22,9 +22,27 @@
                         <h5 class="card-title">@(paste.Title.Length > 0 ? paste.Title : paste.ID)</h5>
                         <p class="card-text font-monospace text-muted fst-italic lh-1">@pasteContent.Substring(0, Math.Min(pasteContent.Length, 64))…</p>
                     </div>
-                    <div class="card-footer border-light">By @(paste.Author?.ToString() ?? "Guest")</div>
+                    <div class="card-footer border-light">
+                        <span class="badge bg-light text-dark syntax-badge">@paste.Syntax</span>
+                        <span class="fst-italic text-muted float-end">@Paste.TimeAgo(paste.Date)</span>
+                    </div>
                 </div>
             </a>
         </div>
     }
 </div>
+
+<script src="~/js/highlight.pack.js"></script>
+
+<script>
+    let syntaxes = document.getElementsByClassName("syntax-badge");
+    for (let i = 0; i < syntaxes.length; i++) {
+        let syntax = syntaxes[i].textContent;
+        try {
+            let lang = hljs.getLanguage(syntax);
+            syntaxes[i].textContent = lang.name;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+</script>

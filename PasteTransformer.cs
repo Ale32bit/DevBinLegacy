@@ -16,7 +16,7 @@ namespace DevBin {
 
                 Database database = httpContext.RequestServices.GetService(typeof(Database)) as Database;
 
-                Paste? paste = database.FetchPaste(pasteId);
+                Paste paste = database.FetchPaste(pasteId);
 
                 values.Remove("ErrorDescription");
 

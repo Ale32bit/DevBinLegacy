@@ -3,52 +3,47 @@
 @{
     ViewData["Title"] = Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID;
     ViewData["IncludeHighlight"] = true;
+    bool IsLoggedIn = HttpContext.Request.RouteValues["LoggedIn"] != null && (bool)HttpContext.Request.RouteValues["LoggedIn"] || true;
 }
 
-<div class="row">
+<div class="row justify-content-between my-2">
+    <h5 class="d-inline">By @(Model.Paste.Author != null ? Model.Paste.Author : "Guest")</h5>
 
-    <div class="col-sm-8">
-        <label for="paste-input" class="form-label">@if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock"></i>} @(Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID)</label>
-        <div id="paste-content" name="paste-input" class="form-control bg-dark text-light font-monospace codeblock @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
+    <div class="col-4">
+        @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock d-inline"></i>}
+        <span id="paste-syntax" class="badge bg-light text-dark d-inline">@Model.Paste.Syntax</span>
+        <h3 class="form-label fs-4 d-inline">@(Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID)</h3>
+        <span class="text-muted fst-italic d-inline mx-2">@Paste.TimeAgo(Model.Paste.Date)</span>
+
     </div>
-
-    <div class="col-sm-4">
+    <div class="col-4">
         <div class="row">
-            <div class="col-6">
-                <label for="paste-syntax" class="form-label">Paste Syntax</label>
-                <input id="paste-syntax" name="paste-syntax" class="form-control bg-dark text-light" value="@Model.Paste.Syntax" readonly />
+            <div class="row">
+                <div class="col-6">
+                </div>
+                <div class="col-6">
+                </div>
             </div>
             <div class="col-6">
-                <label for="paste-exposure" class="form-label">Paste Exposure</label>
-                <input id="paste-exposure" name="paste-exposure" class="form-control bg-dark text-light" value="@Model.PasteExposure" readonly>
-            </div>
-        </div>
+                @if ( IsLoggedIn ) {
+                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light mb-2"><i class="fas fa-edit"></i> Edit Paste</a>
 
-        <div class="row pt-2">
-            <div class="col-6">
-                <label class="form-label user-select-none">&emsp;</label>
+                }
                 <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</a>
             </div>
             <div class="col-6">
-                <label class="form-label user-select-none">&emsp;</label>
+                @if ( IsLoggedIn ) {
+                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled mb-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+
+                }
                 <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Clone Paste</a>
             </div>
         </div>
-
-        @if ( HttpContext.Request.RouteValues["LoggedIn"] != null ) {
-            <div class="row pt-2">
-                <div class="col-6">
-                    <label class="form-label user-select-none">&emsp;</label>
-                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light"><i class="fas fa-edit"></i> Edit Paste</a>
-                </div>
-                <div class="col-6">
-                    <label class="form-label user-select-none">&emsp;</label>
-                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled"><i class="fas fa-trash-alt"></i> Delete Paste</a>
-                </div>
-            </div>
-        }
     </div>
+
 </div>
+<div id="paste-content" name="paste-input" class="my-2 form-control bg-dark text-light font-monospace codeblock @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
+
 
 @section Scripts {
 
@@ -59,10 +54,10 @@
             const code = document.getElementById("paste-content");
             const syntax = document.getElementById("paste-syntax")
 
-            syntaxId = syntax.value;
+            syntaxId = syntax.textContent;
 
             try {
-                syntax.value = hljs.getLanguage(syntaxId).name;
+                syntax.textContent = hljs.getLanguage(syntaxId).name;
 
                 const worker = new Worker('/js/hl-worker.js');
                 worker.onmessage = (event) => {
@@ -74,7 +69,7 @@
                 });
             } catch (e) {
                 console.error(e);
-                syntax.value = syntaxId;
+                syntax.textContent = syntaxId;
             }
         });
     </script>

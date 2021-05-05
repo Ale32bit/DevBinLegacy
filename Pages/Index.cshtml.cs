@@ -12,7 +12,7 @@ namespace DevBin.Pages {
         private readonly ILogger<IndexModel> _logger;
 
         public bool IsCloning { get; set; }
-        public Paste? Clone { get; set; }
+        public Paste Clone { get; set; }
         public string CloneContent { get; set; }
 
         public IndexModel(ILogger<IndexModel> logger) {
@@ -35,9 +35,16 @@ namespace DevBin.Pages {
 
         public void OnPost() {
             Paste paste = new();
+            paste.Title = "Unnamed Paste";
+            if ( Request.Form.ContainsKey("paste-title") && ((string)Request.Form["paste-title"]).Length > 0 ) {
+                paste.Title = Request.Form["paste-title"];
+            }
 
-            paste.Title = Request.Form.ContainsKey("paste-title") ? Request.Form["paste-title"] : "Unnamed Paste";
-            paste.Syntax = Request.Form.ContainsKey("paste-syntax") ? Request.Form["paste-syntax"] : "plaintext";
+            paste.Syntax = "plaintext";
+            if ( Request.Form.ContainsKey("paste-syntax") && ((string)Request.Form["paste-syntax"]).Length > 0 ) {
+                paste.Syntax = Request.Form["paste-syntax"];
+            }
+
             paste.Exposure = PasteExposure.Public;
             if ( int.TryParse(Request.Form["paste-exposure"].ToString(), out var exp) ) {
                 switch ( exp ) {

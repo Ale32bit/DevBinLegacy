@@ -1,16 +1,18 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = Model.IsCloning ? "Cloning " + Model.Clone.ID : null;
+    if ( Model.IsCloning ) {
+        ViewData["Title"] = "Cloning " + Model.Clone.ID;
+    }
     ViewData["IncludeHighlight"] = true;
 }
 
 <form method="post" asp-action="Index" onsubmit="event.preventDefault(); validate();">
     <div class="row">
 
-        <div class="col-sm-8">
+        <div class="col-sm-8 has-validation">
             <textarea id="paste-input" name="paste-input" class="form-control bg-dark text-light font-monospace"
-                      placeholder="<code> /dev/bin </code>" wrap="soft" required=""
+                      placeholder="<code> /dev/bin </code>" wrap="soft" required
                       onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()">@(Model.IsCloning ? Model.CloneContent : "")</textarea>
         </div>
 
@@ -40,7 +42,9 @@
                     <select id="paste-exposure" name="paste-exposure" class="form-select bg-dark text-light">
                         <option value="0">Public</option>
                         <option value="1">Unlisted</option>
-                        <option value="2">Private</option>
+                        @if ( HttpContext.Request.RouteValues["LoggedIn"] != null ) {
+                            <option value="2">Private</option>
+}
                         <option value="3" id="encrypt-option">Encrypted</option>
                     </select>
                 </div>
