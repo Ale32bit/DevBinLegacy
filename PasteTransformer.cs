@@ -26,6 +26,7 @@ namespace DevBin {
                 } else {
                     values["ErrorDescription"] = "Paste not found";
                     values["page"] = "/Error";
+                    httpContext.Response.StatusCode = 404;
                 }
 
 

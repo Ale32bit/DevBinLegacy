@@ -15,26 +15,56 @@ namespace DevBin {
         }
 
 #nullable enable
-        public Paste? FetchPaste(string id) {
+        public Paste? FetchPaste(string id, MySqlConnection conn) {
             Paste? paste = null;
-            using ( MySqlConnection conn = GetConnection() ) {
+            if ( conn.State != System.Data.ConnectionState.Open ) {
                 conn.Open();
+            }
 
-                MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = @id;", conn);
-                cmd.Parameters.AddWithValue("@id", id);
-                using ( var reader = cmd.ExecuteReader() ) {
-                    if ( reader.Read() ) {
-                        paste = new Paste() {
-                            ID = reader.GetString("id"),
-                            Title = reader.GetString("title"),
-                            Syntax = reader.GetString("syntax"),
-                            Exposure = (Paste.PasteExposure)reader.GetByte("exposure"),
-                            Date = reader.GetDateTime("timestamp"),
-                        };
-                    }
+            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = @id;", conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            using ( var reader = cmd.ExecuteReader() ) {
+                if ( reader.Read() ) {
+                    paste = new Paste() {
+                        ID = reader.GetString("id"),
+                        Title = reader.GetString("title"),
+                        Syntax = reader.GetString("syntax"),
+                        Exposure = (Paste.PasteExposure)reader.GetByte("exposure"),
+                        Date = reader.GetDateTime("timestamp"),
+                    };
                 }
             }
+
+            conn.Close();
+
             return paste;
+        }
+        public Paste? FetchPaste(string id) {
+            MySqlConnection conn = GetConnection();
+            return FetchPaste(id, conn);
+        }
+
+        public Paste[] GetLatest(int n = 30) {
+            List<Paste> pastes = new();
+            MySqlConnection conn = GetConnection();
+
+            conn.Open();
+
+            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT {n};", conn);
+            using ( var reader = cmd.ExecuteReader() ) {
+                while ( reader.Read() ) {
+                    pastes.Add(new Paste() {
+                        ID = reader.GetString("id"),
+                        Title = reader.GetString("title"),
+                        Syntax = reader.GetString("syntax"),
+                        Exposure = (Paste.PasteExposure)reader.GetByte("exposure"),
+                        Date = reader.GetDateTime("timestamp"),
+                    });
+                }
+            }
+
+            conn.Close();
+            return pastes.ToArray();
         }
 
         public bool Exists(string id, MySqlConnection conn) {
@@ -42,12 +72,12 @@ namespace DevBin {
                 conn.Open();
             }
 
-            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = '{MySqlHelper.EscapeString(id)}';", conn);
+            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = @id;", conn);
+            cmd.Parameters.AddWithValue("@id", id);
             using ( var reader = cmd.ExecuteReader() ) {
                 return reader.HasRows;
             }
         }
-
         public bool Exists(string id) {
             MySqlConnection conn = GetConnection();
             return Exists(id, conn);
@@ -75,7 +105,9 @@ namespace DevBin {
                 cmd.Parameters.AddWithValue("@exposure", (byte)paste.Exposure);
 
                 int affected = cmd.ExecuteNonQuery();
+                conn.Close();
             }
+
 
             return id;
         }

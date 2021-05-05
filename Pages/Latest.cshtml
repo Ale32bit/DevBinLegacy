@@ -1,5 +1,30 @@
 ﻿@page
 @model DevBin.Pages.LatestModel
 @{
-    ViewData["Title"] = "Latest pastes";
+    ViewData["Title"] = "Latest Pastes";
+
+    Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
+    PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
+
+    Paste[] pastes = database.GetLatest();
 }
+
+<div class="row mx-lg-5">
+    @foreach ( Paste paste in pastes ) {
+        //<a href="/@paste.ID">@(paste.Title ?? paste.ID)</a>
+
+        string pasteContent = pasteFs.Read(paste.ID);
+
+        <div class="col-4">
+            <a href="/@paste.ID" class="text-decoration-none">
+                <div class="card text-white bg-dark border-light mb-3">
+                    <div class="card-body border-light">
+                        <h5 class="card-title">@(paste.Title.Length > 0 ? paste.Title : paste.ID)</h5>
+                        <p class="card-text font-monospace text-muted fst-italic lh-1">@pasteContent.Substring(0, Math.Min(pasteContent.Length, 64))…</p>
+                    </div>
+                    <div class="card-footer border-light">By @(paste.Author?.ToString() ?? "Guest")</div>
+                </div>
+            </a>
+        </div>
+    }
+</div>

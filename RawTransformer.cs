@@ -18,15 +18,13 @@ namespace DevBin {
                 PasteFs pasteFs = httpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
 
                 Paste? paste = database.FetchPaste(pasteId);
-
-                Console.WriteLine("reached");
-
+                httpContext.Response.ContentType = "text/plain; charset=UTF-8";
                 if ( paste != null && paste.Exposure == Paste.PasteExposure.Public || paste.Exposure == Paste.PasteExposure.Unlisted ) {
                     string pasteContent = pasteFs.Read(paste.ID);
-                    httpContext.Response.ContentType = "text/plain; charset=UTF-8";
                     httpContext.Response.WriteAsync(pasteContent).Wait();
                 } else {
-                    values["page"] = "/Error";
+                    httpContext.Response.StatusCode = 404;
+                    httpContext.Response.WriteAsync("Error 404 - The paste could not be found").Wait();
                 }
 
 

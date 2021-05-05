@@ -8,7 +8,7 @@
 <div class="row">
 
     <div class="col-sm-8">
-        <label for="paste-input" class="form-label">@Model.Paste.Title</label>
+        <label for="paste-input" class="form-label">@if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock"></i>} @(Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID)</label>
         <div id="paste-content" name="paste-input" class="form-control bg-dark text-light font-monospace codeblock @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
     </div>
 
@@ -85,14 +85,26 @@
                 <div class="modal-content bg-dark">
                     <div class="modal-header">
                         <h5 class="modal-title" id="unlockLabel"><i class="fas fa-lock"></i> Encrypted Paste!</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close text-light" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p>This paste is encrypted and requires a key to be readable.</p>
                     </div>
                     <div class="modal-footer">
-                        <input id="paste-key" name="paste-key" type="password" class="form-control bg-dark text-light" placeholder="Paste key..." />
-                        <button type="button" class="btn btn-primary"><i class="fas fa-unlock"></i> Decrypt</button>
+                        <div class="row row-cols-lg-auto g-3">
+                            <div class="col-8">
+                                <label class="visually-hidden" for="paste-key">Key</label>
+                                <div class="input-group">
+                                    <div class="input-group-text"><i class="fas fa-key"></i></div>
+                                    <input id="paste-key" name="paste-key" type="password" autocomplete="off" class="form-control bg-dark text-light" placeholder="Paste key..." />
+                                </div>
+                            </div>
+
+                            <div class="col-4">
+                                <label class="visually-hidden">Decrypt</label>
+                                <button type="button" class="btn btn-primary" onclick="decryptPaste();"><i class="fas fa-unlock"></i> Decrypt</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -102,20 +114,20 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js" integrity="sha512-nOQuvD9nKirvxDdvQ9OMqe2dgapbPB7vYAMrzJihw5m+aNcf0dX53m6YxM4LgA9u8e9eg9QX+/+mPu8kCNpV2A==" crossorigin="anonymous"></script>
         <script src="~/js/aes.js" type="text/javascript"></script>
         <script>
-
-
             let modal = new bootstrap.Modal(document.getElementById('unlock-modal'), {})
-            modal.show();
 
+            function decryptPaste() {
+                let pasteKey = document.getElementById("paste-key");
 
-
-
-            /*let pasteContent = document.getElementById("paste-content");
-            if (typeof key === "string") {
-                let res = decrypt(pasteContent.textContent, key);
+                let pasteContent = document.getElementById("paste-content");
+                let res = decrypt(pasteContent.textContent, pasteKey.value);
                 pasteContent.textContent = res;
                 pasteContent.classList.remove("locked");
-            }*/
+                pasteContent.classList.remove("text-muted");
+                modal.hide();
+            }
+
+            modal.show();
         </script>
     }
 }

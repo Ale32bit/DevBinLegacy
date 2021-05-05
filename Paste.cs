@@ -25,5 +25,6 @@ namespace DevBin {
         public int? Author { get; set; }
         [Required, DataType(DataType.DateTime)]
         public DateTime Date { get; set; }
+        public string Content { get; set; }
     }
 }
