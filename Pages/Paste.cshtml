@@ -25,18 +25,18 @@
                 </div>
             </div>
             <div class="col-6">
-                @if ( IsLoggedIn ) {
-                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light mb-2"><i class="fas fa-edit"></i> Edit Paste</a>
 
-                }
                 <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</a>
+                @if ( IsLoggedIn ) {
+                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light mt-2"><i class="fas fa-edit"></i> Edit Paste</a>
+                }
             </div>
             <div class="col-6">
-                @if ( IsLoggedIn ) {
-                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled mb-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
 
-                }
                 <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Clone Paste</a>
+                @if ( IsLoggedIn ) {
+                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+                }
             </div>
         </div>
     </div>
