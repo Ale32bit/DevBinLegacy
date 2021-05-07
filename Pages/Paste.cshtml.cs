@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using static DevBin.Paste;
 
 namespace DevBin.Pages {
     public class PasteModel : PageModel {
@@ -25,22 +19,12 @@ namespace DevBin.Pages {
             HttpContext.Request.RouteValues.TryGetValue("paste", out var paste);
 
             Paste = (Paste)paste;
-            switch ( Paste.Exposure ) {
-                default:
-                case Paste.PasteExposure.Public:
-                    PasteExposure = "Public";
-                    break;
-                case Paste.PasteExposure.Unlisted:
-                    PasteExposure = "Unlisted";
-                    break;
-                case Paste.PasteExposure.Private:
-                    PasteExposure = "Private";
-                    break;
-                case Paste.PasteExposure.Encrypted:
-                    PasteExposure = "Encrypted";
-                    break;
-            }
-
+            PasteExposure = Paste.Exposure switch {
+                Paste.PasteExposure.Unlisted => "Unlisted",
+                Paste.PasteExposure.Private => "Private",
+                Paste.PasteExposure.Encrypted => "Encrypted",
+                _ => "Public",
+            };
             PasteContent = pasteFs.Read(Paste.ID);
 
         }

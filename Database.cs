@@ -1,8 +1,6 @@
-﻿using System;
+﻿using MySql.Data.MySqlClient;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MySql.Data.MySqlClient;
 
 namespace DevBin {
     public class Database {
@@ -21,7 +19,7 @@ namespace DevBin {
                 conn.Open();
             }
 
-            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = @id;", conn);
+            MySqlCommand cmd = new($"SELECT * FROM `pastes` WHERE id = @id;", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using ( var reader = cmd.ExecuteReader() ) {
                 if ( reader.Read() ) {
@@ -50,7 +48,7 @@ namespace DevBin {
 
             conn.Open();
 
-            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT {n};", conn);
+            MySqlCommand cmd = new($"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT {n};", conn);
             using ( var reader = cmd.ExecuteReader() ) {
                 while ( reader.Read() ) {
                     pastes.Add(new Paste() {
@@ -72,11 +70,9 @@ namespace DevBin {
                 conn.Open();
             }
 
-            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM `pastes` WHERE id = @id;", conn);
+            MySqlCommand cmd = new($"SELECT * FROM `pastes` WHERE id = @id;", conn);
             cmd.Parameters.AddWithValue("@id", id);
-            using ( var reader = cmd.ExecuteReader() ) {
-                return reader.HasRows;
-            }
+            using var reader = cmd.ExecuteReader(); return reader.HasRows;
         }
         public bool Exists(string id) {
             MySqlConnection conn = GetConnection();
@@ -96,7 +92,7 @@ namespace DevBin {
                     id = RandomID();
                 } while ( Exists(id, conn) );
 
-                MySqlCommand cmd = new MySqlCommand(@"INSERT INTO `pastes` (
+                MySqlCommand cmd = new(@"INSERT INTO `pastes` (
                     `id`, `authorId`, `title`, `syntax`, `exposure`
                 ) VALUES (
                     @id, @authorId, @title, @syntax, @exposure
@@ -120,7 +116,7 @@ namespace DevBin {
 
             string alpha = "abcdefghijklmnopqrstuvwxyz";
 
-            Random random = new Random();
+            Random random = new();
 
             for ( int i = 0; i < 8; i++ ) {
                 string ch = alpha[random.Next(0, alpha.Length)].ToString();

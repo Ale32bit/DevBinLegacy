@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using System.IO.Compression;
 using System.Text;
-using System.Configuration;
 
 namespace DevBin {
     public class PasteFs {
@@ -25,13 +21,11 @@ namespace DevBin {
         public void Write(string id, string content) {
             if ( UseCompression ) {
                 byte[] byteArray = Encoding.ASCII.GetBytes(content);
-                MemoryStream stream = new MemoryStream(byteArray);
+                MemoryStream stream = new(byteArray);
 
-                using ( var writeStream = File.OpenWrite(Path.Combine(DataPath, id)) )
-                using ( var brotli = new BrotliStream(writeStream, CompressionMode.Compress) ) {
-
-                    stream.CopyTo(brotli);
-                }
+                using var writeStream = File.OpenWrite(Path.Combine(DataPath, id));
+                using var brotli = new BrotliStream(writeStream, CompressionMode.Compress);
+                stream.CopyTo(brotli);
             } else {
                 File.WriteAllText(Path.Combine(DataPath, id), content);
             }
@@ -41,17 +35,13 @@ namespace DevBin {
         public string Read(string id) {
             if ( File.Exists(Path.Combine(DataPath, id)) ) {
                 if ( UseCompression ) {
-                    using ( FileStream inputStream = File.OpenRead(Path.Combine(DataPath, id)) ) {
-                        using ( Stream outputStream = new MemoryStream() ) {
-                            using ( BrotliStream brotli = new BrotliStream(inputStream, CompressionMode.Decompress) ) {
-                                brotli.CopyTo(outputStream);
-                                var reader = new StreamReader(outputStream);
+                    using FileStream inputStream = File.OpenRead(Path.Combine(DataPath, id)); 
+                    using Stream outputStream = new MemoryStream();
+                    using BrotliStream brotli = new(inputStream, CompressionMode.Decompress); brotli.CopyTo(outputStream);
+                    var reader = new StreamReader(outputStream);
 
-                                Console.WriteLine("TEST: " + reader.ReadToEnd());
-                                return "x";
-                            }
-                        }
-                    }
+                    Console.WriteLine("TEST: " + reader.ReadToEnd());
+                    return "x";
                 } else {
                     return File.ReadAllText(Path.Combine(DataPath, id));
                 }

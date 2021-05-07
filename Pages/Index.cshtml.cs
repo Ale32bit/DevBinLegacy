@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System;
 using static DevBin.Paste;
 
 namespace DevBin.Pages {
@@ -20,12 +16,12 @@ namespace DevBin.Pages {
         }
 
         public void OnGet() {
-            if(HttpContext.Request.Query.ContainsKey("clone")) {
+            if ( HttpContext.Request.Query.ContainsKey("clone") ) {
                 Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
                 PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
 
                 Clone = database.FetchPaste(HttpContext.Request.Query["clone"]);
-                if(Clone != null) {
+                if ( Clone != null ) {
                     IsCloning = true;
                     CloneContent = pasteFs.Read(Clone.ID);
                 }
@@ -47,21 +43,12 @@ namespace DevBin.Pages {
 
             paste.Exposure = PasteExposure.Public;
             if ( int.TryParse(Request.Form["paste-exposure"].ToString(), out var exp) ) {
-                switch ( exp ) {
-                    case 0:
-                    default:
-                        paste.Exposure = PasteExposure.Public;
-                        break;
-                    case 1:
-                        paste.Exposure = PasteExposure.Unlisted;
-                        break;
-                    case 2:
-                        paste.Exposure = PasteExposure.Private;
-                        break;
-                    case 3:
-                        paste.Exposure = PasteExposure.Encrypted;
-                        break;
-                }
+                paste.Exposure = exp switch {
+                    1 => PasteExposure.Unlisted,
+                    2 => PasteExposure.Private,
+                    3 => PasteExposure.Encrypted,
+                    _ => PasteExposure.Public,
+                };
             }
 
             paste.Date = DateTime.Now;

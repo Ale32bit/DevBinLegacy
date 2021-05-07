@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 
 namespace DevBin.Pages {
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -31,7 +26,7 @@ namespace DevBin.Pages {
 
             ErrorStatusCode = code;
 
-            if(HttpContext.Request.RouteValues.ContainsKey("ErrorDescription")) {
+            if ( HttpContext.Request.RouteValues.ContainsKey("ErrorDescription") ) {
                 ErrorDescription = (string)HttpContext.Request.RouteValues["ErrorDescription"];
             }
 
