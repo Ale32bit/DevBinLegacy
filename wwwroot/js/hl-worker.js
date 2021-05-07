@@ -18,5 +18,8 @@ onmessage = (event) => {
     const result = self.hljs.highlight(event.data.code, {
         language: event.data.language
     });
+
+    //result.value = hljs.lineNumbersValue(result.value)
+
     postMessage(result.value);
 };

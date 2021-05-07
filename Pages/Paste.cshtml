@@ -3,39 +3,33 @@
 @{
     ViewData["Title"] = Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID;
     ViewData["IncludeHighlight"] = true;
-    bool IsLoggedIn = HttpContext.Request.RouteValues["LoggedIn"] != null && (bool)HttpContext.Request.RouteValues["LoggedIn"] || true;
+    bool IsLoggedIn = HttpContext.Request.RouteValues["LoggedIn"] != null && (bool)HttpContext.Request.RouteValues["LoggedIn"];
 }
 
 <div class="row justify-content-between my-2">
     <h5 class="d-inline">By @(Model.Paste.Author != null ? Model.Paste.Author : "Guest")</h5>
 
-    <div class="col-4">
+    <div class="col-9 col-sm-8">
         @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock d-inline"></i>}
-        <span id="paste-syntax" class="badge bg-light text-dark d-inline">@Model.Paste.Syntax</span>
+        <span id="paste-syntax" class="badge rounded-pill bg-light text-dark d-inline">@Model.Paste.Syntax</span>
         <h3 class="form-label fs-4 d-inline">@(Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID)</h3>
         <span class="text-muted fst-italic d-inline mx-2">@Paste.TimeAgo(Model.Paste.Date)</span>
 
     </div>
-    <div class="col-4">
+    <div class="col-3 col-sm-4">
         <div class="row">
-            <div class="row">
-                <div class="col-6">
-                </div>
-                <div class="col-6">
-                </div>
-            </div>
             <div class="col-6">
 
-                <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-light"><i class="fas fa-code"></i> Raw Paste</a>
+                <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-sm btn-light"><i class="fas fa-code"></i> Raw Paste</a>
                 @if ( IsLoggedIn ) {
-                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light mt-2"><i class="fas fa-edit"></i> Edit Paste</a>
+                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-light mt-2"><i class="fas fa-edit"></i> Edit Paste</a>
                 }
             </div>
             <div class="col-6">
 
-                <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Clone Paste</a>
+                <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-light"><i class="fas fa-plus"></i> Clone Paste</a>
                 @if ( IsLoggedIn ) {
-                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-danger disabled mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-danger disabled mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
                 }
             </div>
         </div>
@@ -44,15 +38,33 @@
 </div>
 <div id="paste-content" name="paste-input" class="my-2 form-control bg-dark text-light font-monospace codeblock @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
 
+@if ( Model.PasteContent.Split("\n").Length > 2048 ) {
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+        <div id="too-long-alert" class="toast show bg-dark" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-dark">
+                <strong class="me-auto">Slow performance</strong>
+            </div>
+            <div class="toast-body">
+                <p>Line numbers are not processed because it will impact the page performance.</p>
+                <button type="button" class="btn btn-primary btn-sm" onclick="displayLinesAnyway(this);">Display anyway</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeAlert();">Ignore</button>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
 
     <script src="~/js/highlight.pack.js"></script>
+    <script src="~/js/hlln.min.js"></script>
 
     <script>
+        const code = document.getElementById("paste-content");
+
         addEventListener('load', () => {
-            const code = document.getElementById("paste-content");
             const syntax = document.getElementById("paste-syntax")
+
+            let lines = code.innerText.match(/\n/g)?.length || 1;
 
             syntaxId = syntax.textContent;
 
@@ -62,16 +74,37 @@
                 const worker = new Worker('/js/hl-worker.js');
                 worker.onmessage = (event) => {
                     code.innerHTML = event.data;
+
+                    if (lines <= 2048) {
+                        displayLines();
+                    }
+
                 }
                 worker.postMessage({
                     code: code.innerText,
                     language: syntaxId,
+                    //element: code,
                 });
             } catch (e) {
                 console.error(e);
                 syntax.textContent = syntaxId;
             }
         });
+
+        function displayLines() {
+            hljs.lineNumbersBlock(code);
+        }
+
+        function displayLinesAnyway(btn) {
+            btn.disabled = true
+            displayLines();
+            closeAlert();
+        }
+
+        function closeAlert() {
+            let alert = document.getElementById('too-long-alert');
+            alert.classList.remove('show');
+        }
     </script>
 
     @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {

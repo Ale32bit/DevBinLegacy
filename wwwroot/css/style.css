@@ -13,9 +13,8 @@
 
 #paste-content {
     overflow: auto;
-    overflow-wrap: normal;
-    white-space: pre;
-    min-height: 10em;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
     outline: none;
     border-color: var(--bs-light);
     box-shadow: none;
