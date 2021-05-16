@@ -4,6 +4,11 @@
     ViewData["Title"] = Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID;
     ViewData["IncludeHighlight"] = true;
     bool IsLoggedIn = HttpContext.Request.RouteValues["LoggedIn"] != null && (bool)HttpContext.Request.RouteValues["LoggedIn"];
+
+    string pasteTitle = Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID;
+    if ( pasteTitle.Length >= 48 ) {
+        pasteTitle = pasteTitle.Substring(0, Math.Min(pasteTitle.Length, 48)) + "…";
+    }
 }
 
 <div class="row justify-content-between my-2">
@@ -12,7 +17,7 @@
     <div class="col-9 col-sm-8">
         @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock d-inline"></i>}
         <span id="paste-syntax" class="badge rounded-pill bg-light text-dark d-inline">@Model.Paste.Syntax</span>
-        <h3 class="form-label fs-4 d-inline">@(Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID)</h3>
+        <h3 class="form-label fs-4 d-inline">@pasteTitle</h3>
         <span class="text-muted fst-italic d-inline mx-2">@Paste.TimeAgo(Model.Paste.Date)</span>
 
     </div>
@@ -20,23 +25,23 @@
         <div class="row">
             <div class="col-6">
 
-                <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-sm btn-light"><i class="fas fa-code"></i> Raw Paste</a>
+                <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-sm btn-outline-light"><i class="fas fa-code"></i> Raw Paste</a>
                 @if ( IsLoggedIn ) {
-                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-light mt-2"><i class="fas fa-edit"></i> Edit Paste</a>
+                    <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-light mt-2"><i class="fas fa-edit"></i> Edit Paste</a>
                 }
             </div>
             <div class="col-6">
 
-                <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-light"><i class="fas fa-plus"></i> Clone Paste</a>
+                <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-light"><i class="fas fa-plus"></i> Clone Paste</a>
                 @if ( IsLoggedIn ) {
-                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-danger disabled mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-danger disabled mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
                 }
             </div>
         </div>
     </div>
 
 </div>
-<div id="paste-content" name="paste-input" class="my-2 form-control bg-dark text-light font-monospace codeblock @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
+<div id="paste-content" name="paste-input" class="my-2 form-control bg-dark text-light font-monospace codeblock outline-dark @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
 
 @if ( Model.PasteContent.Split("\n").Length > 2048 ) {
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">

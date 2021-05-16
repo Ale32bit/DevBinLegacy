@@ -11,15 +11,15 @@
     <div class="row">
 
         <div class="col-sm-8 has-validation">
-            <textarea id="paste-input" name="paste-input" class="form-control bg-dark text-light font-monospace"
-                      placeholder="<code> /dev/bin </code>" wrap="soft" required
+            <textarea id="paste-input" name="paste-input" class="form-control bg-dark text-light font-monospace outline-dark"
+                      placeholder="<code> /dev/bin </code>" wrap="soft" required autofocus autocomplete="off"
                       onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()">@(Model.IsCloning ? Model.CloneContent : "")</textarea>
         </div>
 
         <div class="col-sm-4">
             <div class="row">
                 <div class="col-6">
-                    <label for="paste-title" class="form-label">Paste Title</label>
+                    <label for="paste-title" class="form-label" autocomplete="off">Paste Title</label>
                     <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" />
                 </div>
                 <div class="col-6">
@@ -44,7 +44,7 @@
                         <option value="1">Unlisted</option>
                         @if ( HttpContext.Request.RouteValues["LoggedIn"] != null ) {
                             <option value="2">Private</option>
-}
+                        }
                         <option value="3" id="encrypt-option">Encrypted</option>
                     </select>
                 </div>

@@ -14,15 +14,19 @@
         //<a href="/@paste.ID">@(paste.Title ?? paste.ID)</a>
 
         string pasteContent = pasteFs.Read(paste.ID);
+        string pasteTitle = paste.Title.Length > 0 ? paste.Title : paste.ID;
+        if ( pasteTitle.Length >= 48 ) {
+            pasteTitle = pasteTitle.Substring(0, Math.Min(pasteTitle.Length, 48)) + "…";
+        }
 
         <div class="col-4">
             <a href="/@paste.ID" class="text-decoration-none">
-                <div class="card text-white bg-dark border-light mb-3">
+                <div class="card text-white bg-dark outline-dark mb-3">
                     <div class="card-body border-light">
-                        <h5 class="card-title">@(paste.Title.Length > 0 ? paste.Title : paste.ID)</h5>
+                        <h5 class="card-title">@pasteTitle</h5>
                         <p class="card-text font-monospace text-muted fst-italic lh-1">@pasteContent.Substring(0, Math.Min(pasteContent.Length, 64))…</p>
                     </div>
-                    <div class="card-footer border-light">
+                    <div class="card-footer outline-dark">
                         <span class="badge bg-light text-dark syntax-badge">@paste.Syntax</span>
                         <span class="fst-italic text-muted float-end">@Paste.TimeAgo(paste.Date)</span>
                     </div>
