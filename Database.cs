@@ -13,13 +13,14 @@ namespace DevBin {
         }
 
 #nullable enable
+        // This method also increases views field!
         public Paste? FetchPaste(string id, MySqlConnection conn) {
             Paste? paste = null;
             if ( conn.State != System.Data.ConnectionState.Open ) {
                 conn.Open();
             }
 
-            MySqlCommand cmd = new($"SELECT * FROM `pastes` WHERE id = @id;", conn);
+            MySqlCommand cmd = new($"UPDATE `pastes` SET views = views+1 WHERE id = @id; SELECT * FROM `pastes` WHERE id = @id;", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using ( var reader = cmd.ExecuteReader() ) {
                 if ( reader.Read() ) {
@@ -29,6 +30,7 @@ namespace DevBin {
                         Syntax = reader.GetString("syntax"),
                         Exposure = (Paste.PasteExposure)reader.GetByte("exposure"),
                         Date = reader.GetDateTime("timestamp"),
+                        Views = reader.GetUInt32("views"),
                     };
                 }
             }

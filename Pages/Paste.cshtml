@@ -15,10 +15,12 @@
     <h5 class="d-inline">By @(Model.Paste.Author != null ? Model.Paste.Author : "Guest")</h5>
 
     <div class="col-9 col-sm-8">
-        @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock d-inline"></i>}
-        <span id="paste-syntax" class="badge rounded-pill bg-light text-dark d-inline">@Model.Paste.Syntax</span>
-        <h3 class="form-label fs-4 d-inline">@pasteTitle</h3>
-        <span class="text-muted fst-italic d-inline mx-2">@Paste.TimeAgo(Model.Paste.Date)</span>
+        @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock d-inline"></i>}<h3 class="form-label fs-4 d-inline">@pasteTitle</h3>
+        <div>
+            <span id="paste-syntax" class="badge rounded-pill bg-light text-dark d-inline">@Model.Paste.Syntax</span>
+            <span class="text-muted d-inline ms-2"><i class="fas fa-eye"></i> @Model.Paste.Views</span>
+            <span class="text-muted d-inline ms-2"><i class="fas fa-clock"></i> @Paste.TimeAgo(Model.Paste.Date)</span>
+        </div>
 
     </div>
     <div class="col-3 col-sm-4">

@@ -15,6 +15,7 @@ namespace DevBin {
         public PasteExposure Exposure { get; set; }
         public int? Author { get; set; }
         public DateTime Date { get; set; }
+        public uint Views { get; set; }
 
         public static string TimeAgo(DateTime date) {
             const int SECOND = 1;
