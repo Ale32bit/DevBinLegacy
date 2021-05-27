@@ -29,6 +29,7 @@ namespace DevBin {
                         Syntax = reader.GetString("syntax"),
                         Exposure = (Paste.PasteExposure)reader.GetByte("exposure"),
                         Date = reader.GetDateTime("timestamp"),
+                        ContentCache = reader.GetString("contentCache") ?? "",
                     };
                 }
             }
@@ -93,9 +94,9 @@ namespace DevBin {
                 } while ( Exists(id, conn) );
 
                 MySqlCommand cmd = new(@"INSERT INTO `pastes` (
-                    `id`, `authorId`, `title`, `syntax`, `exposure`
+                    `id`, `authorId`, `title`, `syntax`, `exposure`, `contentCache`
                 ) VALUES (
-                    @id, @authorId, @title, @syntax, @exposure
+                    @id, @authorId, @title, @syntax, @exposure, @contentCache
                 );", conn);
 
                 cmd.Parameters.AddWithValue("@id", id);
@@ -103,6 +104,7 @@ namespace DevBin {
                 cmd.Parameters.AddWithValue("@title", paste.Title);
                 cmd.Parameters.AddWithValue("@syntax", paste.Syntax);
                 cmd.Parameters.AddWithValue("@exposure", (byte)paste.Exposure);
+                cmd.Parameters.AddWithValue("@contentCache", paste.ContentCache);
 
                 int affected = cmd.ExecuteNonQuery();
                 conn.Close();
@@ -110,6 +112,82 @@ namespace DevBin {
 
             return id;
         }
+
+        public bool Update(Paste paste, MySqlConnection conn) {
+            paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
+            paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
+
+            if ( conn.State != System.Data.ConnectionState.Open ) {
+                conn.Open();
+            }
+
+            MySqlCommand cmd = new(@"UPDATE pastes
+                                    SET (title = @title, syntax = @syntax, exposure = @exposure, contentCache = @contentCache)
+                                    WHERE id = @id;");
+
+            cmd.Parameters.AddWithValue("@id", paste.ID);
+            cmd.Parameters.AddWithValue("@title", paste.Title);
+            cmd.Parameters.AddWithValue("@syntax", paste.Syntax);
+            cmd.Parameters.AddWithValue("@exposure", (byte)paste.Exposure);
+            cmd.Parameters.AddWithValue("@contentCache", paste.ContentCache);
+
+            return cmd.ExecuteNonQuery() == 1;
+        }
+
+        public bool Update(Paste paste) {
+            MySqlConnection conn = GetConnection();
+            return Update(paste, conn);
+        }
+
+        public bool Delete(Paste paste, MySqlConnection conn) {
+            if ( conn.State != System.Data.ConnectionState.Open ) {
+                conn.Open();
+            }
+
+            MySqlCommand cmd = new(@"DELETE FROM pastes WHERE id = @id;");
+
+            cmd.Parameters.AddWithValue("@id", paste.ID);
+
+            return cmd.ExecuteNonQuery() == 1;
+        }
+
+        public bool Delete(Paste paste) {
+            MySqlConnection conn = GetConnection();
+            return Delete(paste, conn);
+        }
+
+        /*public User CreateUser(string name, string email, string password) {
+            string hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
+            User user = new User(hash) {
+
+            };
+        }*/
+
+        public User? FetchUser(int loginDetail) {
+            MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            User user;
+
+            MySqlCommand cmd = new(@"SELECT * FROM users WHERE username = @loginDetail OR email = @loginDetail;");
+
+            cmd.Parameters.AddWithValue("@loginDetail", loginDetail);
+
+            using ( var reader = cmd.ExecuteReader() ) {
+                if ( reader.Read() ) {
+                    user = new User(reader.GetString("password")) {
+                        ID = reader.GetInt32("id"),
+                        Username = reader.GetString("username"),
+                        Email = reader.GetString("email"),
+                    };
+
+                    return user;
+                }
+            }
+
+            return null;
+        }
+
 
         internal static string RandomID() {
             string code = "";

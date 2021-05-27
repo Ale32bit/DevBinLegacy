@@ -1,10 +1,16 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace DevBin {
     public class Program {
+        public static int BCryptCost;
         public static void Main(string[] args) {
+            BCryptCost = Benchmark.GetOptimalBCryptCost();
+
+            Console.WriteLine($"Optimal BCrypt Cost: {BCryptCost}");
+
             CreateHostBuilder(args).Build().Run();
         }
 

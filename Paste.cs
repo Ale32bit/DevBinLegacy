@@ -16,6 +16,8 @@ namespace DevBin {
         public int? Author { get; set; }
         public DateTime Date { get; set; }
 
+        public string ContentCache { get; set; }
+
         public static string TimeAgo(DateTime date) {
             const int SECOND = 1;
             const int MINUTE = 60 * SECOND;

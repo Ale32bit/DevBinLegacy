@@ -30,6 +30,7 @@ namespace DevBin.Pages {
         }
 
         public void OnPost() {
+            string content = Request.Form["paste-input"];
             Paste paste = new();
             paste.Title = "Unnamed Paste";
             if ( Request.Form.ContainsKey("paste-title") && ((string)Request.Form["paste-title"]).Length > 0 ) {
@@ -51,6 +52,8 @@ namespace DevBin.Pages {
                 };
             }
 
+            paste.ContentCache = content.Substring(0, Math.Min(64, content.Length));
+
             paste.Date = DateTime.Now;
 
             Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
@@ -58,7 +61,6 @@ namespace DevBin.Pages {
 
             var id = database.Upload(paste);
 
-            string content = Request.Form["paste-input"];
 
             pasteFs.Write(id, content);
 
