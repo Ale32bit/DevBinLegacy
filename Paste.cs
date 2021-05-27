@@ -15,6 +15,7 @@ namespace DevBin {
         public PasteExposure Exposure { get; set; }
         public int? Author { get; set; }
         public DateTime Date { get; set; }
+        public uint Views { get; set; }
 
         public string ContentCache { get; set; }
 
