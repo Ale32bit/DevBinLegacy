@@ -96,6 +96,8 @@ CREATE TABLE IF NOT EXISTS `users` (
                         Syntax = reader.GetString("syntax"),
                         Exposure = (Paste.PasteExposure)reader.GetByte("exposure"),
                         Date = reader.GetDateTime("timestamp"),
+                        Views = reader.GetUInt32("views"),
+                        ContentCache = reader.GetString("contentCache") ?? "",
                     });
                 }
             }

@@ -7,9 +7,10 @@ namespace DevBin {
     public class Program {
         public static int BCryptCost;
         public static void Main(string[] args) {
-            BCryptCost = Benchmark.GetOptimalBCryptCost();
+            Console.WriteLine("Starting BCrypt benchmark...");
+            //BCryptCost = Benchmark.GetOptimalBCryptCost();
 
-            Console.WriteLine($"Optimal BCrypt Cost: {BCryptCost}");
+            //Console.WriteLine($"Optimal BCrypt Cost: {BCryptCost}");
 
             CreateHostBuilder(args).Build().Run();
         }
