@@ -4,15 +4,8 @@ using System.Collections.Generic;
 
 namespace DevBin {
     public class Database {
-        public const string CreateSQL = @"
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET NAMES utf8 */;
-/*!50503 SET NAMES utf8mb4 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
-CREATE TABLE IF NOT EXISTS `pastes` (
+        public const string CreateSQL =
+@"CREATE TABLE IF NOT EXISTS `pastes` (
   `id` varchar(8) NOT NULL,
   `authorId` int(11) DEFAULT NULL,
   `title` varchar(255) NOT NULL DEFAULT 'Unnamed paste',
@@ -21,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `pastes` (
   `timestamp` timestamp NOT NULL DEFAULT current_timestamp(),
   `updateTimestamp` timestamp NULL DEFAULT NULL,
   `views` int(10) unsigned NOT NULL DEFAULT 0,
-  `contentCache` varchar(255) DEFAULT NULL,
+  `contentCache` varchar(255) DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `Author` (`authorId`),
   CONSTRAINT `Author` FOREIGN KEY (`authorId`) REFERENCES `users` (`id`) ON DELETE SET NULL
@@ -34,15 +27,18 @@ CREATE TABLE IF NOT EXISTS `users` (
   `password` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Unique` (`username`,`email`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
-/*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;
-/*!40014 SET FOREIGN_KEY_CHECKS=IFNULL(@OLD_FOREIGN_KEY_CHECKS, 1) */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40111 SET SQL_NOTES=IFNULL(@OLD_SQL_NOTES, 1) */;";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
         public string ConnectionString { get; set; }
         public Database(string connectionString) {
             ConnectionString = connectionString;
+
+            // Create tables if not exist
+            var conn = GetConnection();
+            conn.Open();
+            MySqlCommand cmd = new(CreateSQL, conn);
+            cmd.ExecuteNonQuery();
+            conn.Close();
+
         }
         public MySqlConnection GetConnection() {
             return new MySqlConnection(ConnectionString);
