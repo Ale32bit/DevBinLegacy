@@ -3,14 +3,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DevBin {
     public class UserPaste {
-        public string title { get; set; }
-        public string syntax { get; set; }
-        public Paste.PasteExposure exposure { get; set; }
-        public string content { get; set; }
+        public string Title { get; set; }
+        public string Syntax { get; set; }
+        public Paste.Exposures Exposure { get; set; }
+        public string Content { get; set; }
+        public bool AsGuest { get; set; }
 
     }
     public class Paste {
-        public enum PasteExposure {
+        public enum Exposures {
             Public = 0,
             Unlisted = 1,
             Private = 2,
@@ -20,7 +21,7 @@ namespace DevBin {
         public string ID { get; set; }
         public string Title { get; set; }
         public string Syntax { get; set; }
-        public PasteExposure Exposure { get; set; }
+        public Exposures Exposure { get; set; }
         public int? Author { get; set; }
         public DateTime Date { get; set; }
         public uint Views { get; set; }

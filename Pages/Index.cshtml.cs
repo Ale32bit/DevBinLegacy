@@ -42,13 +42,13 @@ namespace DevBin.Pages {
                 paste.Syntax = Request.Form["paste-syntax"];
             }
 
-            paste.Exposure = PasteExposure.Public;
+            paste.Exposure = Exposures.Public;
             if ( int.TryParse(Request.Form["paste-exposure"].ToString(), out var exp) ) {
                 paste.Exposure = exp switch {
-                    1 => PasteExposure.Unlisted,
-                    2 => PasteExposure.Private,
-                    3 => PasteExposure.Encrypted,
-                    _ => PasteExposure.Public,
+                    1 => Exposures.Unlisted,
+                    2 => Exposures.Private,
+                    3 => Exposures.Encrypted,
+                    _ => Exposures.Public,
                 };
             }
 

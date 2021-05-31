@@ -82,7 +82,10 @@ namespace DevBin {
                     Title = "DevBin",
                     Version = "v2",
                     Description = "Fetch and create pastes with the DevBin API",
-                });
+                    Contact = new OpenApiContact {
+                        Name = "AlexDevs"
+                    }
+                }) ;
 
 
                 // Set the comments path for the Swagger JSON and UI.
@@ -112,6 +115,7 @@ namespace DevBin {
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/docs/v2/swagger.json", "DevBin API");
                 c.InjectStylesheet("/swagger-ui/custom.css");
+                c.DocumentTitle = "DevBin API Documentation";
                 c.RoutePrefix = "docs";
             });
 

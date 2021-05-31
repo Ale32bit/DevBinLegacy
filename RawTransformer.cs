@@ -10,7 +10,7 @@ namespace DevBin {
         }
 
         public override async ValueTask<RouteValueDictionary> TransformAsync(HttpContext httpContext, RouteValueDictionary values) {
-            return await Task.Run(() => {
+            return await Task.Run((System.Func<RouteValueDictionary>)(() => {
                 string pasteId = (string)values["pasteId"];
 
                 Database database = httpContext.RequestServices.GetService(typeof(Database)) as Database;
@@ -18,7 +18,7 @@ namespace DevBin {
 
                 Paste paste = database.FetchPaste(pasteId);
                 httpContext.Response.ContentType = "text/plain; charset=UTF-8";
-                if ( paste != null && paste.Exposure == Paste.PasteExposure.Public || paste.Exposure == Paste.PasteExposure.Unlisted ) {
+                if ( paste != null && paste.Exposure == Paste.Exposures.Public || paste.Exposure == Paste.Exposures.Unlisted ) {
                     string pasteContent = pasteFs.Read(paste.ID);
                     httpContext.Response.WriteAsync(pasteContent).Wait();
                 } else {
@@ -28,7 +28,7 @@ namespace DevBin {
 
 
                 return values;
-            });
+            }));
         }
     }
 }

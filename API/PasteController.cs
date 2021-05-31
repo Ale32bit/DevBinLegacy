@@ -19,14 +19,13 @@ namespace DevBin.API {
     /// API to interact with pastes
     /// </summary>
     [ApiController]
-    [Route("/api/v2/paste")]
     public class PasteController : Controller {
         /// <summary>
         /// Fetch a paste information using its ID
         /// </summary>
         /// <param name="id">Paste ID</param>
         /// <returns>Information about the paste</returns>
-        /// <remarks>Returns an empty set for not existing pastes</remarks>
+        /// <remarks>Paste content can be fetched from /raw/{id}</remarks>
         [Route("/api/v2/paste/{id}")]
         [HttpGet]
         [ProducesResponseType(typeof(Paste), 200)]
@@ -60,28 +59,42 @@ namespace DevBin.API {
             }
 
 
-            if(userPaste.content == null || userPaste.title == null) {
+            if(userPaste.Content == null || userPaste.Title == null) {
                 return BadRequest(new APIError(400, "Missing fields"));
             }
 
+            if(userPaste.AsGuest) {
+                if(userPaste.Exposure == Paste.Exposures.Private || userPaste.Exposure == Paste.Exposures.Encrypted) {
+                    userPaste.Exposure = Paste.Exposures.Unlisted;
+                }
+            }
 
             Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
             PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
 
-            Paste paste = new Paste() {
-                Title = userPaste.title,
-                Exposure = (Paste.PasteExposure)userPaste.exposure,
-                Syntax = userPaste.syntax ?? "plaintext",
-                ContentCache = userPaste.content.Substring(0, Math.Min(userPaste.content.Length, 64)),
+            Paste paste = new() {
+                Title = userPaste.Title,
+                Exposure = userPaste.Exposure,
+                Syntax = userPaste.Syntax ?? "plaintext",
+                ContentCache = userPaste.Content.Substring(0, Math.Min(userPaste.Content.Length, 64)),
             };
 
             string id = database.Upload(paste);
 
-            pasteFs.Write(id, userPaste.content);
+            pasteFs.Write(id, userPaste.Content);
 
             Paste cPaste = database.FetchPaste(id);
 
             return Ok(cPaste);
+        }
+
+        [Route("/api/v2/latest")]
+        [HttpGet]
+        [ProducesResponseType(typeof(Paste[]), 200)]
+        [Produces("application/json")]
+        public ActionResult Latest() {
+            Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
+            return Ok(database.GetLatest());
         }
 
 

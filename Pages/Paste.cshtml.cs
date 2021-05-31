@@ -20,9 +20,9 @@ namespace DevBin.Pages {
 
             Paste = (Paste)paste;
             PasteExposure = Paste.Exposure switch {
-                Paste.PasteExposure.Unlisted => "Unlisted",
-                Paste.PasteExposure.Private => "Private",
-                Paste.PasteExposure.Encrypted => "Encrypted",
+                Paste.Exposures.Unlisted => "Unlisted",
+                Paste.Exposures.Private => "Private",
+                Paste.Exposures.Encrypted => "Encrypted",
                 _ => "Public",
             };
             PasteContent = pasteFs.Read(Paste.ID);

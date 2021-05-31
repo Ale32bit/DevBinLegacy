@@ -12,10 +12,10 @@
 }
 
 <div class="row justify-content-between my-2">
-    <h5 class="d-inline">By @(Model.Paste.Author != null ? Model.Paste.Author : "Guest")</h5>
+    <h6 class="m-0">By @(Model.Paste.Author != null ? Model.Paste.Author : "Guest")</h6>
 
     <div class="col-9 col-sm-8">
-        @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {<i class="fas fa-lock d-inline"></i>}<h3 class="form-label fs-4 d-inline">@pasteTitle</h3>
+        @if ( Model.Paste.Exposure == Paste.Exposures.Encrypted ) {<i class="fas fa-lock d-inline"></i>}<h3 class="form-label fs-4 d-inline">@pasteTitle</h3>
         <div>
             <span id="paste-syntax" class="badge rounded-pill bg-light text-dark d-inline">@Model.Paste.Syntax</span>
             <span class="text-muted d-inline ms-2"><i class="fas fa-eye"></i> @Model.Paste.Views</span>
@@ -43,7 +43,7 @@
     </div>
 
 </div>
-<div id="paste-content" name="paste-input" class="my-2 form-control bg-dark text-light font-monospace codeblock outline-dark @(Model.Paste.Exposure == Paste.PasteExposure.Encrypted ? "locked" : "")">@Html.Raw(Model.PasteContent)</div>
+<div id="paste-content" name="paste-input" class="my-2 form-control bg-dark text-light font-monospace codeblock outline-dark @(Model.Paste.Exposure == Paste.Exposures.Encrypted ? "locked" : "")">@(Model.Paste.Exposure == Paste.Exposures.Encrypted ? Html.Raw(Model.PasteContent) : Model.PasteContent)</div>
 
 @if ( Model.PasteContent.Split("\n").Length > 2048 ) {
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
@@ -114,7 +114,7 @@
         }
     </script>
 
-    @if ( Model.Paste.Exposure == Paste.PasteExposure.Encrypted ) {
+    @if ( Model.Paste.Exposure == Paste.Exposures.Encrypted ) {
         <div class="modal fade" id="unlock-modal" tabindex="-1" aria-labelledby="unlockLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content bg-dark">
