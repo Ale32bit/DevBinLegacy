@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS `users` (
             conn.Close();
 
         }
+
         public MySqlConnection GetConnection() {
             return new MySqlConnection(ConnectionString);
         }

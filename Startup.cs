@@ -5,6 +5,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using Microsoft.OpenApi.Models;
+using System.Text.Json.Serialization;
+using System.Reflection;
+using System.IO;
+using Microsoft.AspNetCore.Mvc;
+using System.Net.Mime;
+using System.Linq;
+using System.Text;
 
 namespace DevBin {
     public class Startup {
@@ -44,6 +52,45 @@ namespace DevBin {
                 options.SlidingExpiration = true;
             });
 
+            services.AddControllers()
+                .ConfigureApiBehaviorOptions(options => {
+                    options.InvalidModelStateResponseFactory = context => {
+                        var result = new BadRequestObjectResult(context.ModelState);
+
+                        var errors = context.ModelState
+                            .Where(x => x.Value.Errors.Count > 0)
+                            .Select(x => new { x.Key, x.Value.Errors })
+                            .ToArray();
+
+                        var fullErrors = new StringBuilder();
+
+                        foreach(var error in errors) {
+                            foreach(var message in error.Errors) {
+                                fullErrors.Append(message.ErrorMessage);
+                            }
+                        }
+
+                        result.ContentTypes.Add(MediaTypeNames.Application.Json);
+                        result.Value = new API.APIError(400, fullErrors.ToString());
+                        return result;
+                    };
+                })
+                .AddJsonOptions(options =>
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+            services.AddSwaggerGen(c => {
+                c.SwaggerDoc("v2", new OpenApiInfo {
+                    Title = "DevBin",
+                    Version = "v2",
+                    Description = "Fetch and create pastes with the DevBin API",
+                });
+
+
+                // Set the comments path for the Swagger JSON and UI.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,6 +106,15 @@ namespace DevBin {
                 app.UseHsts();
             }
 
+            app.UseSwagger(c => {
+                c.RouteTemplate = "docs/{documentname}/swagger.json";
+            });
+            app.UseSwaggerUI(c => {
+                c.SwaggerEndpoint("/docs/v2/swagger.json", "DevBin API");
+                c.InjectStylesheet("/swagger-ui/custom.css");
+                c.RoutePrefix = "docs";
+            });
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
@@ -68,6 +124,7 @@ namespace DevBin {
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => {
+                endpoints.MapControllers();
                 endpoints.MapRazorPages();
                 endpoints.MapDynamicPageRoute<PasteTransformer>(@"{pasteId:regex(^[A-Za-z]{{8}})}");
                 endpoints.MapDynamicPageRoute<RawTransformer>(@"raw/{pasteId:regex(^[A-Za-z{{8}}])}");

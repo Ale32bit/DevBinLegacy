@@ -1,6 +1,14 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace DevBin {
+    public class UserPaste {
+        public string title { get; set; }
+        public string syntax { get; set; }
+        public Paste.PasteExposure exposure { get; set; }
+        public string content { get; set; }
+
+    }
     public class Paste {
         public enum PasteExposure {
             Public = 0,
