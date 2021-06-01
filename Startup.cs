@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using System.Linq;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace DevBin {
     public class Startup {
@@ -24,6 +25,16 @@ namespace DevBin {
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services) {
+            services.AddDistributedMemoryCache();
+
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromSeconds(300);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+                options.Cookie.Name = "devbin_s";
+            });
+
             services.AddRazorPages();
 
             // Pastes transformer
@@ -108,6 +119,18 @@ namespace DevBin {
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
             }
+
+
+            app.Use((context, next) => {
+                /*if(!context.Request.Cookies.ContainsKey("devbin_session")) {
+                    context.Response.Cookies.Append("devbin_session", Utils.RandomString(64), new CookieOptions() {
+                        IsEssential = true,
+                        HttpOnly = true,
+                        Secure = false,
+                    });
+                }*/
+                return next();
+            });
 
             app.UseSwagger(c => {
                 c.RouteTemplate = "docs/{documentname}/swagger.json";

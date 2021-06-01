@@ -47,13 +47,13 @@ CREATE TABLE IF NOT EXISTS `users` (
 
 #nullable enable
         // This method also increases views field!
-        public Paste? FetchPaste(string id, MySqlConnection conn) {
+        public Paste? FetchPaste(string id, MySqlConnection conn, bool updateViews = false) {
             Paste? paste = null;
             if ( conn.State != System.Data.ConnectionState.Open ) {
                 conn.Open();
             }
 
-            MySqlCommand cmd = new($"UPDATE `pastes` SET views = views+1 WHERE id = @id; SELECT * FROM `pastes` WHERE id = @id;", conn);
+            MySqlCommand cmd = new($"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * FROM `pastes` WHERE id = @id;", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using ( var reader = cmd.ExecuteReader() ) {
                 if ( reader.Read() ) {
@@ -73,9 +73,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 
             return paste;
         }
-        public Paste? FetchPaste(string id) {
+        public Paste? FetchPaste(string id, bool updateViews = false) {
             MySqlConnection conn = GetConnection();
-            return FetchPaste(id, conn);
+            return FetchPaste(id, conn, updateViews);
         }
 
         public Paste[] GetLatest(int n = 30) {

@@ -13,6 +13,8 @@ namespace DevBin {
             return await Task.Run(() => {
                 string pasteId = (string)values["pasteId"];
 
+
+
                 Database database = httpContext.RequestServices.GetService(typeof(Database)) as Database;
 
                 Paste paste = database.FetchPaste(pasteId);
