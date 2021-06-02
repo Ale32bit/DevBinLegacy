@@ -32,7 +32,7 @@ namespace DevBin {
                 options.IdleTimeout = TimeSpan.FromSeconds(300);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
-                options.Cookie.Name = "devbin_s";
+                options.Cookie.Name = "devbin_session";
             });
 
             services.AddRazorPages();
@@ -82,7 +82,7 @@ namespace DevBin {
                         }
 
                         result.ContentTypes.Add(MediaTypeNames.Application.Json);
-                        result.Value = new API.APIError(400, fullErrors.ToString());
+                        result.Value = new API.Error(400, fullErrors.ToString());
                         return result;
                     };
                 })

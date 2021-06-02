@@ -22,7 +22,7 @@ namespace DevBin {
 
 CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `username` varchar(63) NOT NULL,
+  `username` varchar(64) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
@@ -193,14 +193,16 @@ CREATE TABLE IF NOT EXISTS `users` (
             return Delete(paste, conn);
         }
 
-        /*public User CreateUser(string name, string email, string password) {
+        public User CreateUser(string name, string email, string password) {
             string hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
             User user = new User(hash) {
 
             };
-        }*/
 
-        public User? FetchUser(int loginDetail) {
+            return user;
+        }
+
+        public User? FetchUser(string loginDetail) {
             MySqlConnection conn = GetConnection();
             conn.Open();
 
@@ -223,6 +225,23 @@ CREATE TABLE IF NOT EXISTS `users` (
             }
 
             return null;
+        }
+
+        public User? CreateUser(User user, string password) {
+            MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd = new(@"INSERT INTO `users` (username, email, password) VALUES (@username, @email, @password);");
+
+            cmd.Parameters.AddWithValue("@username", user.Username);
+            cmd.Parameters.AddWithValue("@email", user.Email);
+            cmd.Parameters.AddWithValue("@password", password);
+
+            if(cmd.ExecuteNonQuery() > 1) {
+                return FetchUser(user.Email);
+            } else {
+                return null;
+            }
         }
 
 

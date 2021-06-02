@@ -6,10 +6,10 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace DevBin.API {
-    public class APIError {
+    public class Error {
         public int Code { get; set; }
         public string Message { get; set; }
-        public APIError(int code, string message) {
+        public Error(int code, string message) {
             Code = code;
             Message = message;
         }
@@ -29,7 +29,7 @@ namespace DevBin.API {
         [Route("/api/v2/paste/{id}")]
         [HttpGet]
         [ProducesResponseType(typeof(Paste), 200)]
-        [ProducesResponseType(typeof(APIError), 404)]
+        [ProducesResponseType(typeof(Error), 404)]
         [Produces("application/json")]
         public ActionResult Index(string id) {
             Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
@@ -40,7 +40,7 @@ namespace DevBin.API {
                 return Ok(paste);
             }
 
-            return NotFound(new APIError(404, "Paste not found"));
+            return NotFound(new Error(404, "Paste not found"));
         }
 
         /// <summary>
@@ -49,18 +49,18 @@ namespace DevBin.API {
         [Route("/api/v2/create")]
         [HttpPost]
         [ProducesResponseType(typeof(Paste), 200)]
-        [ProducesResponseType(typeof(APIError), 400)]
+        [ProducesResponseType(typeof(Error), 400)]
         [Produces("application/json")]
         [Consumes("application/json")]
         public ActionResult Create([FromBody]UserPaste userPaste) {
 
             if(!ModelState.IsValid) {
-                return BadRequest(new APIError(400, "Invalid JSON data"));
+                return BadRequest(new Error(400, "Invalid JSON data"));
             }
 
 
             if(userPaste.Content == null || userPaste.Title == null) {
-                return BadRequest(new APIError(400, "Missing fields"));
+                return BadRequest(new Error(400, "Missing fields"));
             }
 
             if(userPaste.AsGuest) {
@@ -96,7 +96,5 @@ namespace DevBin.API {
             Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
             return Ok(database.GetLatest());
         }
-
-
     }
 }
