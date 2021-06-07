@@ -6,7 +6,7 @@ namespace DevBin {
         public int ID { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
-        private string Password;
+        private readonly string Password;
 
         public User(string password) {
             Password = password;
@@ -17,7 +17,7 @@ namespace DevBin {
         }
 
         public static string Hash(string password) {
-            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 11, true);
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: Program.BCryptCost, true);
         }
 
         public static bool IsUsernameValid(string username) {
@@ -25,7 +25,7 @@ namespace DevBin {
             return regex.IsMatch(username);
         }
 
-        public static bool isEmailValid(string email) {
+        public static bool IsEmailValid(string email) {
             try {
                 var addr = new MailAddress(email);
                 return addr.Address == email;
@@ -33,5 +33,15 @@ namespace DevBin {
                 return false;
             }
         }
+    }
+
+    public class UserProfile {
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public Paste[] Pastes { get; set; }
+    }
+    public class UserProfileLimited {
+        public string Username { get; set; }
+        public Paste[] Pastes { get; set; }
     }
 }

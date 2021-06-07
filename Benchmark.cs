@@ -6,11 +6,12 @@ namespace DevBin {
     public class Benchmark {
         public static int GetOptimalBCryptCost(int minTimeTarget = 100) {
             long timeTaken;
-            int cost = 4;
+            int cost = 3;
 
-            string password = RandomString(32);
+            var password = RandomString(32);
 
             do {
+                cost++;
                 if ( cost > 31 ) return 31;
                 var sw = Stopwatch.StartNew();
 

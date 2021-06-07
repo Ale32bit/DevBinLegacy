@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Collections.Generic;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using System.Reflection;
@@ -13,7 +14,9 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using System.Linq;
 using System.Text;
+using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Http;
+using Microsoft.OpenApi.Interfaces;
 
 namespace DevBin {
     public class Startup {
@@ -27,8 +30,11 @@ namespace DevBin {
         public void ConfigureServices(IServiceCollection services) {
             services.AddDistributedMemoryCache();
 
-            services.AddSession(options =>
-            {
+            services.AddMemoryCache();
+            services.AddSingleton<IClientPolicyStore, MemoryCacheClientPolicyStore>();
+            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+
+            services.AddSession(options => {
                 options.IdleTimeout = TimeSpan.FromSeconds(300);
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
@@ -45,21 +51,36 @@ namespace DevBin {
             var mvc = services.AddMvc();
             mvc.AddRazorRuntimeCompilation();
 
-            services.Add(new ServiceDescriptor(typeof(Database), new Database(Configuration.GetConnectionString("Database"))));
-            services.Add(new ServiceDescriptor(typeof(PasteFs), new PasteFs(Configuration.GetValue<string>("DataPath"), Configuration.GetValue<bool>("UseCompression"))));
+            services.Add(new ServiceDescriptor(typeof(Database),
+                new Database(Configuration.GetConnectionString("Database"))));
+            services.Add(new ServiceDescriptor(typeof(PasteFs),
+                new PasteFs(Configuration.GetValue<string>("DataPath"),
+                    Configuration.GetValue<bool>("UseCompression"))));
+
+            services.Configure<ClientRateLimitOptions>(options => {
+                options.GeneralRules = new List<RateLimitRule> {
+                    new() {
+                        Endpoint = "/Index",
+                        Period = "1m",
+                        Limit = 5,
+                    },
+                };
+            });
 
             services.Configure<IdentityOptions>(options => {
-                options.Password.RequiredLength = 8;
-
-                options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
+                options.SignIn.RequireConfirmedAccount = true;
                 options.User.RequireUniqueEmail = true;
+                options.Password.RequiredLength = 8;
+                options.User.AllowedUserNameCharacters =
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
             });
+
 
             services.ConfigureApplicationCookie(options => {
                 options.Cookie.HttpOnly = true;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-                options.LoginPath = "/Login";
-                options.AccessDeniedPath = "/Error";
+                options.LoginPath = "/Account/Login";
+                options.AccessDeniedPath = "/Account/Error";
                 options.SlidingExpiration = true;
             });
 
@@ -70,41 +91,40 @@ namespace DevBin {
 
                         var errors = context.ModelState
                             .Where(x => x.Value.Errors.Count > 0)
-                            .Select(x => new { x.Key, x.Value.Errors })
+                            .Select(x => new {x.Key, x.Value.Errors})
                             .ToArray();
 
                         var fullErrors = new StringBuilder();
 
-                        foreach(var error in errors) {
-                            foreach(var message in error.Errors) {
+                        foreach (var error in errors) {
+                            foreach (var message in error.Errors) {
                                 fullErrors.Append(message.ErrorMessage);
                             }
                         }
 
                         result.ContentTypes.Add(MediaTypeNames.Application.Json);
-                        result.Value = new API.Error(400, fullErrors.ToString());
+                        result.Value = new API.Response(400, fullErrors.ToString());
                         return result;
                     };
                 })
                 .AddJsonOptions(options =>
-            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
             services.AddSwaggerGen(c => {
                 c.SwaggerDoc("v2", new OpenApiInfo {
                     Title = "DevBin",
                     Version = "v2",
                     Description = "Fetch and create pastes with the DevBin API",
                     Contact = new OpenApiContact {
-                        Name = "AlexDevs"
+                        Name = "AlexDevs",
+                        Url = new Uri("https://alexdevs.pw"),
                     }
-                }) ;
-
+                });
 
                 // Set the comments path for the Swagger JSON and UI.
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
-
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -112,10 +132,10 @@ namespace DevBin {
             app.UseStatusCodePagesWithReExecute("/Error", "?code={0}");
             app.UseHsts();
 
-            if ( env.IsDevelopment() ) {
+            if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
-
-            } else {
+            }
+            else {
                 app.UseExceptionHandler("/Error");
                 app.UseHsts();
             }
@@ -132,9 +152,7 @@ namespace DevBin {
                 return next();
             });
 
-            app.UseSwagger(c => {
-                c.RouteTemplate = "docs/{documentname}/swagger.json";
-            });
+            app.UseSwagger(c => { c.RouteTemplate = "docs/{documentname}/swagger.json"; });
             app.UseSwaggerUI(c => {
                 c.SwaggerEndpoint("/docs/v2/swagger.json", "DevBin API");
                 c.InjectStylesheet("/swagger-ui/custom.css");
@@ -156,7 +174,6 @@ namespace DevBin {
                 endpoints.MapDynamicPageRoute<PasteTransformer>(@"{pasteId:regex(^[A-Za-z]{{8}})}");
                 endpoints.MapDynamicPageRoute<RawTransformer>(@"raw/{pasteId:regex(^[A-Za-z{{8}}])}");
             });
-
         }
     }
 }

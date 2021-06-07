@@ -11,13 +11,11 @@ namespace DevBin {
 
         public override async ValueTask<RouteValueDictionary> TransformAsync(HttpContext httpContext, RouteValueDictionary values) {
             return await Task.Run(() => {
-                string pasteId = (string)values["pasteId"];
+                var pasteId = (string)values["pasteId"];
 
+                var database = httpContext.RequestServices.GetService(typeof(Database)) as Database;
 
-
-                Database database = httpContext.RequestServices.GetService(typeof(Database)) as Database;
-
-                Paste paste = database.FetchPaste(pasteId);
+                var paste = database?.FetchPaste(pasteId);
 
                 values.Remove("ErrorDescription");
 
