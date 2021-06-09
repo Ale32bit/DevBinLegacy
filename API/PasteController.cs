@@ -107,7 +107,6 @@ namespace DevBin.API {
         /// <returns>The old paste information</returns>
         [Route("/api/v2/delete/{id}")]
         [HttpGet]
-        [HttpDelete]
         [ProducesResponseType(typeof(Paste), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(Response), (int) HttpStatusCode.Unauthorized)]
         [Produces("application/json")]
