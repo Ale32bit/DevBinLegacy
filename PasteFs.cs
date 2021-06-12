@@ -21,11 +21,11 @@ namespace DevBin {
         public void Write(string id, string content) {
             if ( UseCompression ) {
                 byte[] byteArray = Encoding.ASCII.GetBytes(content);
-                MemoryStream stream = new(byteArray);
+                using MemoryStream originalStream = new MemoryStream(byteArray);
+                using FileStream compressedFileStream = File.Create(Path.Combine(DataPath, id));
+                using GZipStream gZipStream = new GZipStream(compressedFileStream, CompressionMode.Compress);
+                originalStream.CopyTo(gZipStream);
 
-                using var writeStream = File.OpenWrite(Path.Combine(DataPath, id));
-                using var brotli = new BrotliStream(writeStream, CompressionMode.Compress);
-                stream.CopyTo(brotli);
             } else {
                 File.WriteAllText(Path.Combine(DataPath, id), content);
             }
@@ -35,19 +35,18 @@ namespace DevBin {
         public string Read(string id) {
             if ( File.Exists(Path.Combine(DataPath, id)) ) {
                 if ( UseCompression ) {
-                    using FileStream inputStream = File.OpenRead(Path.Combine(DataPath, id)); 
-                    using Stream outputStream = new MemoryStream();
-                    using BrotliStream brotli = new(inputStream, CompressionMode.Decompress); brotli.CopyTo(outputStream);
-                    var reader = new StreamReader(outputStream);
-
-                    Console.WriteLine("TEST: " + reader.ReadToEnd());
-                    return "x";
+                    using FileStream originalFileStream = File.OpenRead(Path.Combine(DataPath, id));
+                    using MemoryStream decompressedFileStream = new MemoryStream();
+                    using GZipStream  gZipStream = new GZipStream(originalFileStream, CompressionMode.Decompress);
+                    gZipStream.CopyTo(decompressedFileStream);
+                    
+                    return Encoding.ASCII.GetString(decompressedFileStream.ToArray());
                 } else {
                     return File.ReadAllText(Path.Combine(DataPath, id));
                 }
             }
 
-            return "";
+            return string.Empty;
         }
     }
 }

@@ -4,4 +4,70 @@
     ViewData["Title"] = "Login";
 }
 
-<h1>Login</h1>
+<div class="my-4 row">
+    <div class="offset-md-1 col-md-4 me-auto">
+        <form method="post">
+            <h4>Login</h4>
+            <label for="email-field">Email Address</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="email-label">
+                    <i class="far fa-envelope"></i>
+                </span>
+                <input type="email" id="email-field" class="form-control" aria-label="Email Address" aria-describedby="email-field" required autocomplete="on">
+            </div>
+
+            <label for="password-field">Password</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="password-label">
+                    <i class="fas fa-key"></i>
+                </span>
+                <input type="password" id="password-field" class="form-control" aria-label="Password" aria-describedby="password-field" required spellcheck="false" autocorrect="off" autocapitalize="off">
+                <button class="input-group-text" type="button" id="view-password" onmousedown="showPassword();" onmouseup="hidePassword();" onmouseleave="hidePassword();">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="col-md-4 offset-md-2 ms-auto">
+        <form method="post">
+            <h4>Sign Up</h4>
+            <label for="email-field">Email Address</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="email-label">
+                    <i class="far fa-envelope"></i>
+                </span>
+                <input type="email" id="email-field" class="form-control" aria-label="Email Address" aria-describedby="email-field" required>
+            </div>
+
+            <label for="username-field">Username</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="username-label">@@</span>
+                <input type="text" id="username-field" class="form-control" aria-label="Username" aria-describedby="username-field" required>
+            </div>
+
+            <label for="password-field">Password</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="password-label">
+                    <i class="fas fa-key"></i>
+                </span>
+                <input type="password" id="password-field" class="form-control" aria-label="Password" aria-describedby="password-field" required>
+                <button class="input-group-text" type="button" id="view-password" onmousedown="showPassword();" onmouseup="hidePassword();" onmouseleave="hidePassword();">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    function showPassword() {
+        let passwordField = document.getElementById("password-field");
+        passwordField.type = "text";
+    }
+    
+    function hidePassword() {
+            let passwordField = document.getElementById("password-field");
+            passwordField.type = "password";
+        }
+</script>
