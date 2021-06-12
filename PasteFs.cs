@@ -43,7 +43,7 @@ namespace DevBin {
 
                         return Encoding.ASCII.GetString(decompressedFileStream.ToArray());
                     }
-                    catch (InvalidDataException _) {
+                    catch (InvalidDataException) {
                         return File.ReadAllText(Path.Combine(DataPath, id));
                     }
                 }

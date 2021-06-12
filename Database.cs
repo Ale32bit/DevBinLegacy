@@ -252,11 +252,7 @@ CREATE TABLE IF NOT EXISTS `users` (
             cmd.Parameters.AddWithValue("@email", user.Email);
             cmd.Parameters.AddWithValue("@password", password);
 
-            if(cmd.ExecuteNonQuery() > 1) {
-                return FetchUser(user.Email);
-            } else {
-                return null;
-            }
+            return cmd.ExecuteNonQuery() > 1 ? FetchUser(user.Email) : null;
         }
 
 
