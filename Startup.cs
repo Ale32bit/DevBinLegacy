@@ -79,8 +79,8 @@ namespace DevBin {
             services.ConfigureApplicationCookie(options => {
                 options.Cookie.HttpOnly = true;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-                options.LoginPath = "/Account/Login";
-                options.AccessDeniedPath = "/Account/Error";
+                options.LoginPath = "/User/Login";
+                options.AccessDeniedPath = "/Error";
                 options.SlidingExpiration = true;
             });
 

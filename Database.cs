@@ -17,11 +17,11 @@ namespace DevBin {
   `contentCache` varchar(255) DEFAULT '',
   PRIMARY KEY (`id`),
   KEY `Author` (`authorId`),
-  CONSTRAINT `Author` FOREIGN KEY (`authorId`) REFERENCES `users` (`id`) ON DELETE SET NULL
+  CONSTRAINT `Author` FOREIGN KEY (`authorId`) REFERENCES `users` (`userId`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `users` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `userId` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(64) NOT NULL,
   `email` varchar(255) NOT NULL,
   `password` varchar(255) NOT NULL,
@@ -53,7 +53,8 @@ CREATE TABLE IF NOT EXISTS `users` (
                 conn.Open();
             }
 
-            MySqlCommand cmd = new($"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * FROM `pastes` WHERE id = @id;", conn);
+            int? authorId = null;
+            MySqlCommand cmd = new($"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * from pastes WHERE pastes.id = @id", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using ( var reader = cmd.ExecuteReader() ) {
                 if ( reader.Read() ) {
@@ -66,9 +67,23 @@ CREATE TABLE IF NOT EXISTS `users` (
                         Views = reader.GetUInt32("views"),
                         ContentCache = reader.GetString("contentCache") ?? "",
                     };
+
+                    if (!reader.IsDBNull(reader.GetOrdinal("authorId"))) {
+                        authorId = reader.GetInt32("authorId");
+                    }
                 }
             }
 
+            
+            if (authorId != null && paste != null) {
+                cmd = new MySqlCommand(@"SELECT username FROM `users` WHERE userId = @userId;", conn);
+                cmd.Parameters.AddWithValue("@userId", authorId);
+                using var reader = cmd.ExecuteReader();
+                if (reader.Read()) {
+                    paste.Author = reader.GetString("username");
+                }
+            }
+            
             conn.Close();
 
             return paste;

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 
 namespace DevBin {
     public class UserPaste {
@@ -21,7 +22,7 @@ namespace DevBin {
         public string Title { get; set; }
         public string Syntax { get; set; }
         public Exposures Exposure { get; set; }
-        public int? Author { get; set; }
+        public string? Author { get; set; }
         public DateTime Date { get; set; }
         public uint Views { get; set; }
         public string ContentCache { get; set; }
