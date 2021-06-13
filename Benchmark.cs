@@ -6,32 +6,29 @@ namespace DevBin {
     public class Benchmark {
         public static int GetOptimalBCryptCost(int minTimeTarget = 100) {
             long timeTaken;
-            int cost = 3;
+            var cost = 3;
 
             var password = RandomString(32);
 
             do {
                 cost++;
-                if ( cost > 31 ) return 31;
+                if (cost > 31) return 31;
                 var sw = Stopwatch.StartNew();
 
-                BCrypt.Net.BCrypt.HashPassword(password, workFactor: cost);
+                BCrypt.Net.BCrypt.HashPassword(password, cost);
 
                 sw.Stop();
                 timeTaken = sw.ElapsedMilliseconds;
-            } while ( timeTaken < minTimeTarget );
+            } while (timeTaken < minTimeTarget);
 
             return cost;
         }
 
         public static string RandomString(int length) {
-            Random random = new Random();
+            Random random = new();
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_!?=()[]{}<>/,.;:";
             return new string(Enumerable.Repeat(chars, length)
-              .Select(s => s[random.Next(s.Length)]).ToArray());
+                .Select(s => s[random.Next(s.Length)]).ToArray());
         }
     }
-
-    
-
 }

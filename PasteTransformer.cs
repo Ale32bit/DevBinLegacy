@@ -5,13 +5,12 @@ using System.Threading.Tasks;
 
 namespace DevBin {
     public class PasteTransformer : DynamicRouteValueTransformer {
-        public PasteTransformer() {
+        public PasteTransformer() { }
 
-        }
-
-        public override async ValueTask<RouteValueDictionary> TransformAsync(HttpContext httpContext, RouteValueDictionary values) {
+        public override async ValueTask<RouteValueDictionary> TransformAsync(HttpContext httpContext,
+            RouteValueDictionary values) {
             return await Task.Run(() => {
-                var pasteId = (string)values["pasteId"];
+                var pasteId = (string) values["pasteId"];
 
                 var database = httpContext.RequestServices.GetService(typeof(Database)) as Database;
 
@@ -19,10 +18,11 @@ namespace DevBin {
 
                 values.Remove("ErrorDescription");
 
-                if ( paste != null ) {
+                if (paste != null) {
                     values["paste"] = paste;
                     values["page"] = "/Paste";
-                } else {
+                }
+                else {
                     values["ErrorDescription"] = "Paste not found";
                     values["page"] = "/Error";
                     httpContext.Response.StatusCode = 404;

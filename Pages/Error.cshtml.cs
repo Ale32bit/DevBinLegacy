@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -24,21 +25,19 @@ namespace DevBin.Pages {
         public void OnGet(string code) {
             RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
+            
             ErrorStatusCode = code;
 
-            if ( HttpContext.Request.RouteValues.ContainsKey("ErrorDescription") ) {
-                ErrorDescription = (string)HttpContext.Request.RouteValues["ErrorDescription"];
-            }
+            if (HttpContext.Request.RouteValues.ContainsKey("ErrorDescription"))
+                ErrorDescription = (string) HttpContext.Request.RouteValues["ErrorDescription"];
 
             var statusCodeReExecuteFeature = HttpContext.Features.Get<
-                                                   IStatusCodeReExecuteFeature>();
-            if ( statusCodeReExecuteFeature != null ) {
+                IStatusCodeReExecuteFeature>();
+            if (statusCodeReExecuteFeature != null)
                 OriginalURL =
                     statusCodeReExecuteFeature.OriginalPathBase
                     + statusCodeReExecuteFeature.OriginalPath
                     + statusCodeReExecuteFeature.OriginalQueryString;
-            }
-
         }
     }
 }

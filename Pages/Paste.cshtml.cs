@@ -18,16 +18,14 @@ namespace DevBin.Pages {
 
             HttpContext.Request.RouteValues.TryGetValue("paste", out var paste);
 
-            Paste = (Paste)paste;
+            Paste = (Paste) paste;
             PasteExposure = Paste.Exposure switch {
                 Paste.Exposures.Unlisted => "Unlisted",
                 Paste.Exposures.Private => "Private",
                 Paste.Exposures.Encrypted => "Encrypted",
-                _ => "Public",
+                _ => "Public"
             };
             PasteContent = pasteFs.Read(Paste.ID);
-
         }
-
     }
 }

@@ -1,7 +1,7 @@
 ﻿@page
 @model IndexModel
 @{
-    if ( Model.IsCloning ) {
+    if (Model.IsCloning) {
         ViewData["Title"] = "Cloning " + Model.Clone.ID;
     }
     ViewData["IncludeHighlight"] = true;
@@ -20,15 +20,16 @@
             <div class="row">
                 <div class="col-6">
                     <label for="paste-title" class="form-label" autocomplete="off">Paste Title</label>
-                    <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" />
+                    <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste"/>
                 </div>
                 <div class="col-6">
                     <label for="paste-syntax" class="form-label">Paste Syntax</label>
                     <select id="paste-syntax" name="paste-syntax" class="form-select bg-dark text-light">
                         @{
-                            if ( Model.IsCloning ) {
+                            if (Model.IsCloning) {
                                 <option value="@Model.Clone.Syntax" selected>@Model.Clone.Syntax</option>
-                            } else {
+                            }
+                            else {
                                 <option value="plaintext" selected>None</option>
                             }
                         }
@@ -42,7 +43,7 @@
                     <select id="paste-exposure" name="paste-exposure" class="form-select bg-dark text-light">
                         <option value="0">Public</option>
                         <option value="1">Unlisted</option>
-                        @if ( HttpContext.Request.RouteValues["LoggedIn"] != null ) {
+                        @if (HttpContext.Request.RouteValues["LoggedIn"] != null) {
                             <option value="2">Private</option>
                         }
                         <option value="3" id="encrypt-option">Encrypted</option>
@@ -51,7 +52,7 @@
 
                 <div class="col-6">
                     <label id="paste-key-label" for="paste-key" class="form-label text-muted">Paste Key</label>
-                    <input id="paste-key" name="paste-key" type="password" autocomplete="off" class="form-control bg-dark text-light" placeholder="Paste key..." disabled />
+                    <input id="paste-key" name="paste-key" type="password" autocomplete="off" class="form-control bg-dark text-light" placeholder="Paste key..." disabled/>
                 </div>
             </div>
 

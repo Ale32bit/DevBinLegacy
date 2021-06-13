@@ -6,15 +6,15 @@
 
 <div class="my-4 row">
     <div class="offset-md-1 col-md-4">
-        <form method="post" action="/user/login">
+        <form onsubmit="event.preventDefault(); validateLogin(this);">
             <h4>Login</h4>
-            <label for="email-field">Email Address</label>
+            <label for="email-field">Username or Email Address</label>
             <div class="input-group mb-3">
                 <span class="input-group-text">
                     <i class="far fa-envelope"></i>
                 </span>
 
-                <input type="email" id="login-email-field" class="form-control" aria-label="Email Address" aria-describedby="email-field" required autocomplete="on">
+                <input name="email" type="text" id="login-email-field" class="form-control bg-dark text-light" aria-label="Email Address" aria-describedby="email-field" required autocomplete="on">
                 <div class="invalid-feedback">
                     Invalid address
                 </div>
@@ -25,8 +25,8 @@
                 <span class="input-group-text">
                     <i class="fas fa-key"></i>
                 </span>
-                <input type="password" id="login-password-field" class="form-control" aria-label="Password" aria-describedby="password-field" required spellcheck="false" autocorrect="off" autocapitalize="off">
-                <button class="input-group-text" type="button" onmousedown="showPassword('login-password-field');" onmouseup="hidePassword('login-password-field');" onmouseleave="hidePassword('login-password-field');">
+                <input name="password" type="password" id="login-password-field" class="form-control bg-dark text-light" aria-label="Password" aria-describedby="password-field" required spellcheck="false" autocorrect="off" autocapitalize="off">
+                <button class="input-group-text bg-dark text-light" type="button" onmousedown="showPassword('login-password-field');" onmouseup="hidePassword('login-password-field');" onmouseleave="hidePassword('login-password-field');">
                     <i class="fas fa-eye"></i>
                 </button>
                 <div class="invalid-feedback">
@@ -34,12 +34,13 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Login</button>
+            <button type="submit" class="btn btn-light is-invalid">Login</button>
+            <div id="login-error" class="invalid-feedback"></div>
         </form>
     </div>
 
     <div class="col-md-4 offset-md-2">
-        <form method="post" action="/user/signup">
+        <form onsubmit="event.preventDefault(); validateSignup(this);">
             <h4>Sign Up</h4>
             <label for="email-field">Email Address</label>
             <div class="mb-3">
@@ -47,18 +48,24 @@
                     <span class="input-group-text" id="email-label">
                         <i class="far fa-envelope"></i>
                     </span>
-                    <input type="email" id="email-field" class="form-control" aria-label="Email Address" aria-describedby="email-field" required>
+                    <input name="email" type="email" id="email-field" class="form-control bg-dark text-light" aria-label="Email Address" aria-describedby="email-field" required>
+                    <div class="invalid-feedback">
+                        Invalid address
+                    </div>
                 </div>
-                <div class="form-text text-light">Used for validation of the account</div>
+                <div class="form-text text-light">Used to login</div>
             </div>
 
             <label for="username-field">Username</label>
             <div class="mb-3">
                 <div class="input-group">
                     <span class="input-group-text" id="username-label">@@</span>
-                    <input type="text" id="username-field" class="form-control" aria-label="Username" aria-describedby="username-field" required>
-
+                    <input name="username" type="text" id="username-field" class="form-control bg-dark text-light" aria-label="Username" aria-describedby="username-field" required>
+                    <div class="invalid-feedback">
+                        Invalid username
+                    </div>
                 </div>
+                <div class="form-text text-light">Must be long between 3 and 32 characters<br>Only alphanumerical characters and underscores allowed</div>
             </div>
 
             <label for="password-field">Password</label>
@@ -67,15 +74,19 @@
                     <span class="input-group-text" id="password-label">
                         <i class="fas fa-key"></i>
                     </span>
-                    <input type="password" id="password-field" class="form-control" aria-label="Password" aria-describedby="password-field" required>
-                    <button class="input-group-text" type="button" id="view-password" onmousedown="showPassword('password-field');" onmouseup="hidePassword('password-field');" onmouseleave="hidePassword('password-field');">
+                    <input name="password" type="password" id="password-field" class="form-control bg-dark text-light" aria-label="Password" aria-describedby="password-field" required>
+                    <button class="input-group-text bg-dark text-light" type="button" id="view-password" onmousedown="showPassword('password-field');" onmouseup="hidePassword('password-field');" onmouseleave="hidePassword('password-field');">
                         <i class="fas fa-eye"></i>
                     </button>
+                    <div class="invalid-feedback">
+                        Too short
+                    </div>
                 </div>
-                <div class="form-text text-light">Should contain at least 8 characters</div>
+                <div class="form-text text-light">Should contain at least 8 characters<br>Max length is the HTTP request size lol</div>
             </div>
 
-            <button type="submit" class="btn btn-primary">Sign Up</button>
+            <button type="submit" class="btn btn-light is-invalid">Sign Up</button>
+            <div id="signup-error" class="invalid-feedback"></div>
         </form>
     </div>
 
@@ -110,11 +121,59 @@ function switchValidation(el, valid) {
     }
 }
 
-function validateLogin() {
+function validateLogin(form) {
     let emailField = document.getElementById("login-email-field");
     let passwordField = document.getElementById("login-password-field");
     
-    switchValidation(emailField, validateEmail(emailField.value));
-    switchValidation(passwordField, passwordField.value.length >= 8)
+    
+        let errorLabel = document.getElementById("login-error");
+        const data = new URLSearchParams(new FormData(form));
+        
+        fetch("/user/login", {
+            method: "POST",
+            body: data, 
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.ok){
+                errorLabel.innerText = "";
+            } else {
+                errorLabel.innerText = data.message;
+            }
+        })
+}
+
+async function validateSignup(form) {
+    let emailField = document.getElementById("email-field");
+    let usernameField = document.getElementById("username-field");
+    let passwordField = document.getElementById("password-field");
+    
+    const nameRg = /^[A-Za-z0-9_]{3,32}$/;
+    
+    let emailIsValid = validateEmail(emailField.value);
+    let usernameIsValid = nameRg.test(usernameField.value);
+    let passwordIsValid = passwordField.value.length >= 8;
+    switchValidation(emailField, emailIsValid);
+    switchValidation(usernameField, usernameIsValid);
+    switchValidation(passwordField, passwordIsValid);
+    
+    if (emailIsValid && usernameIsValid && passwordIsValid) {
+        let errorLabel = document.getElementById("signup-error");
+        
+        const data = new URLSearchParams(new FormData(form));
+
+        fetch("/user/signup", {
+            method: "POST",
+            body: data, 
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ok){
+                    errorLabel.innerText = "";
+                } else {
+                    errorLabel.innerText = data.message;
+                }
+            })
+    }
 }
 </script>

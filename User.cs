@@ -17,7 +17,7 @@ namespace DevBin {
         }
 
         public static string Hash(string password) {
-            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: Program.BCryptCost, true);
+            return BCrypt.Net.BCrypt.HashPassword(password, Program.BCryptCost, true);
         }
 
         public static bool IsUsernameValid(string username) {
@@ -29,7 +29,8 @@ namespace DevBin {
             try {
                 var addr = new MailAddress(email);
                 return addr.Address == email;
-            } catch {
+            }
+            catch {
                 return false;
             }
         }
@@ -40,6 +41,7 @@ namespace DevBin {
         public string Email { get; set; }
         public Paste[] Pastes { get; set; }
     }
+
     public class UserProfileLimited {
         public string Username { get; set; }
         public Paste[] Pastes { get; set; }

@@ -10,7 +10,6 @@ namespace DevBin.API {
     [Route("api/v2/[controller]")]
     [ApiController]
     public class UserController : ControllerBase {
-        
         /// <summary>
         /// Retrieves information about your account along with all your pastes
         /// </summary>

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace DevBin {
     public class Database {
         public const string CreateSQL =
-@"CREATE TABLE IF NOT EXISTS `pastes` (
+            @"CREATE TABLE IF NOT EXISTS `pastes` (
   `id` varchar(8) NOT NULL,
   `authorId` int(11) DEFAULT NULL,
   `title` varchar(255) NOT NULL DEFAULT 'Unnamed paste',
@@ -28,7 +28,9 @@ CREATE TABLE IF NOT EXISTS `users` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `Unique` (`username`,`email`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+
         public string ConnectionString { get; set; }
+
         public Database(string connectionString) {
             ConnectionString = connectionString;
 
@@ -38,56 +40,53 @@ CREATE TABLE IF NOT EXISTS `users` (
             MySqlCommand cmd = new(CreateSQL, conn);
             cmd.ExecuteNonQuery();
             conn.Close();
-
         }
 
         public MySqlConnection GetConnection() {
-            return new MySqlConnection(ConnectionString);
+            return new(ConnectionString);
         }
 
 #nullable enable
         // This method also increases views field!
         public Paste? FetchPaste(string id, MySqlConnection conn, bool updateViews = false) {
             Paste? paste = null;
-            if ( conn.State != System.Data.ConnectionState.Open ) {
-                conn.Open();
-            }
+            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
 
             int? authorId = null;
-            MySqlCommand cmd = new($"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * from pastes WHERE pastes.id = @id", conn);
+            MySqlCommand cmd =
+                new(
+                    $"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * from pastes WHERE pastes.id = @id"
+                    , conn);
             cmd.Parameters.AddWithValue("@id", id);
-            using ( var reader = cmd.ExecuteReader() ) {
-                if ( reader.Read() ) {
+            using (var reader = cmd.ExecuteReader()) {
+                if (reader.Read()) {
                     paste = new Paste() {
                         ID = reader.GetString("id"),
                         Title = reader.GetString("title"),
                         Syntax = reader.GetString("syntax"),
-                        Exposure = (Paste.Exposures)reader.GetByte("exposure"),
+                        Exposure = (Paste.Exposures) reader.GetByte("exposure"),
                         Date = reader.GetDateTime("timestamp"),
                         Views = reader.GetUInt32("views"),
-                        ContentCache = reader.GetString("contentCache") ?? "",
+                        ContentCache = reader.GetString("contentCache") ?? ""
                     };
 
-                    if (!reader.IsDBNull(reader.GetOrdinal("authorId"))) {
-                        authorId = reader.GetInt32("authorId");
-                    }
+                    if (!reader.IsDBNull(reader.GetOrdinal("authorId"))) authorId = reader.GetInt32("authorId");
                 }
             }
 
-            
+
             if (authorId != null && paste != null) {
                 cmd = new MySqlCommand(@"SELECT username FROM `users` WHERE userId = @userId;", conn);
                 cmd.Parameters.AddWithValue("@userId", authorId);
                 using var reader = cmd.ExecuteReader();
-                if (reader.Read()) {
-                    paste.Author = reader.GetString("username");
-                }
+                if (reader.Read()) paste.Author = reader.GetString("username");
             }
-            
+
             conn.Close();
 
             return paste;
         }
+
         public Paste? FetchPaste(string id, bool updateViews = false) {
             MySqlConnection conn = GetConnection();
             return FetchPaste(id, conn, updateViews);
@@ -99,19 +98,19 @@ CREATE TABLE IF NOT EXISTS `users` (
 
             conn.Open();
 
-            MySqlCommand cmd = new($"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT {n};", conn);
-            using ( var reader = cmd.ExecuteReader() ) {
-                while ( reader.Read() ) {
+            MySqlCommand cmd =
+                new($"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT {n};", conn);
+            using (var reader = cmd.ExecuteReader()) {
+                while (reader.Read())
                     pastes.Add(new Paste() {
                         ID = reader.GetString("id"),
                         Title = reader.GetString("title"),
                         Syntax = reader.GetString("syntax"),
-                        Exposure = (Paste.Exposures)reader.GetByte("exposure"),
+                        Exposure = (Paste.Exposures) reader.GetByte("exposure"),
                         Date = reader.GetDateTime("timestamp"),
                         Views = reader.GetUInt32("views"),
-                        ContentCache = reader.GetString("contentCache") ?? "",
+                        ContentCache = reader.GetString("contentCache") ?? ""
                     });
-                }
             }
 
             conn.Close();
@@ -119,14 +118,14 @@ CREATE TABLE IF NOT EXISTS `users` (
         }
 
         public bool Exists(string id, MySqlConnection conn) {
-            if ( conn.State != System.Data.ConnectionState.Open ) {
-                conn.Open();
-            }
+            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
 
             MySqlCommand cmd = new($"SELECT * FROM `pastes` WHERE id = @id;", conn);
             cmd.Parameters.AddWithValue("@id", id);
-            using var reader = cmd.ExecuteReader(); return reader.HasRows;
+            using var reader = cmd.ExecuteReader();
+            return reader.HasRows;
         }
+
         public bool Exists(string id) {
             MySqlConnection conn = GetConnection();
             return Exists(id, conn);
@@ -138,12 +137,12 @@ CREATE TABLE IF NOT EXISTS `users` (
             paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
             paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
 
-            using ( MySqlConnection conn = GetConnection() ) {
+            using (MySqlConnection conn = GetConnection()) {
                 conn.Open();
 
                 do {
                     id = RandomID();
-                } while ( Exists(id, conn) );
+                } while (Exists(id, conn));
 
                 MySqlCommand cmd = new(@"INSERT INTO `pastes` (
                     `id`, `authorId`, `title`, `syntax`, `exposure`, `contentCache`
@@ -155,10 +154,10 @@ CREATE TABLE IF NOT EXISTS `users` (
                 cmd.Parameters.AddWithValue("@authorId", null);
                 cmd.Parameters.AddWithValue("@title", paste.Title);
                 cmd.Parameters.AddWithValue("@syntax", paste.Syntax);
-                cmd.Parameters.AddWithValue("@exposure", (byte)paste.Exposure);
+                cmd.Parameters.AddWithValue("@exposure", (byte) paste.Exposure);
                 cmd.Parameters.AddWithValue("@contentCache", paste.ContentCache);
 
-                int affected = cmd.ExecuteNonQuery();
+                var affected = cmd.ExecuteNonQuery();
                 conn.Close();
             }
 
@@ -169,9 +168,7 @@ CREATE TABLE IF NOT EXISTS `users` (
             paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
             paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
 
-            if ( conn.State != System.Data.ConnectionState.Open ) {
-                conn.Open();
-            }
+            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
 
             MySqlCommand cmd = new(@"UPDATE pastes
                                     SET (title = @title, syntax = @syntax, exposure = @exposure, contentCache = @contentCache)
@@ -180,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `users` (
             cmd.Parameters.AddWithValue("@id", paste.ID);
             cmd.Parameters.AddWithValue("@title", paste.Title);
             cmd.Parameters.AddWithValue("@syntax", paste.Syntax);
-            cmd.Parameters.AddWithValue("@exposure", (byte)paste.Exposure);
+            cmd.Parameters.AddWithValue("@exposure", (byte) paste.Exposure);
             cmd.Parameters.AddWithValue("@contentCache", paste.ContentCache);
 
             return cmd.ExecuteNonQuery() == 1;
@@ -192,9 +189,7 @@ CREATE TABLE IF NOT EXISTS `users` (
         }
 
         public bool Delete(Paste paste, MySqlConnection conn) {
-            if ( conn.State != System.Data.ConnectionState.Open ) {
-                conn.Open();
-            }
+            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
 
             MySqlCommand cmd = new(@"DELETE FROM pastes WHERE id = @id;");
 
@@ -210,9 +205,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 
         public User CreateUser(string name, string email, string password) {
             string hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
-            User user = new User(hash) {
-
-            };
+            User user = new(hash) { };
 
             return user;
         }
@@ -223,16 +216,16 @@ CREATE TABLE IF NOT EXISTS `users` (
 
             User user;
 
-            MySqlCommand cmd = new(@"SELECT * FROM users WHERE username = @loginDetail OR email = @loginDetail;");
+            MySqlCommand cmd = new(@"SELECT * FROM users WHERE username = @loginDetail OR email = @loginDetail;", conn);
 
             cmd.Parameters.AddWithValue("@loginDetail", loginDetail);
 
-            using ( var reader = cmd.ExecuteReader() ) {
-                if ( reader.Read() ) {
+            using (var reader = cmd.ExecuteReader()) {
+                if (reader.Read()) {
                     user = new User(reader.GetString("password")) {
-                        ID = reader.GetInt32("id"),
+                        ID = reader.GetInt32("userId"),
                         Username = reader.GetString("username"),
-                        Email = reader.GetString("email"),
+                        Email = reader.GetString("email")
                     };
 
                     return user;
@@ -246,7 +239,8 @@ CREATE TABLE IF NOT EXISTS `users` (
             MySqlConnection conn = GetConnection();
             conn.Open();
 
-            MySqlCommand cmd = new(@"INSERT INTO `users` (username, email, password) VALUES (@username, @email, @password);");
+            MySqlCommand cmd =
+                new(@"INSERT INTO `users` (username, email, password) VALUES (@username, @email, @password);", conn);
 
             cmd.Parameters.AddWithValue("@username", user.Username);
             cmd.Parameters.AddWithValue("@email", user.Email);
@@ -263,11 +257,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 
             Random random = new();
 
-            for ( int i = 0; i < 8; i++ ) {
+            for (var i = 0; i < 8; i++) {
                 string ch = alpha[random.Next(0, alpha.Length)].ToString();
-                if ( random.Next(0, 2) > 0 ) {
-                    ch = ch.ToUpper();
-                }
+                if (random.Next(0, 2) > 0) ch = ch.ToUpper();
                 code += ch;
             }
 

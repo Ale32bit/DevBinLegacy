@@ -62,26 +62,9 @@ namespace DevBin {
                     new() {
                         Endpoint = "/Index",
                         Period = "1m",
-                        Limit = 5,
-                    },
+                        Limit = 5
+                    }
                 };
-            });
-
-            services.Configure<IdentityOptions>(options => {
-                options.SignIn.RequireConfirmedAccount = true;
-                options.User.RequireUniqueEmail = true;
-                options.Password.RequiredLength = 8;
-                options.User.AllowedUserNameCharacters =
-                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
-            });
-
-
-            services.ConfigureApplicationCookie(options => {
-                options.Cookie.HttpOnly = true;
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-                options.LoginPath = "/User/Login";
-                options.AccessDeniedPath = "/Error";
-                options.SlidingExpiration = true;
             });
 
             services.AddControllers()
@@ -96,11 +79,9 @@ namespace DevBin {
 
                         var fullErrors = new StringBuilder();
 
-                        foreach (var error in errors) {
-                            foreach (var message in error.Errors) {
-                                fullErrors.Append(message.ErrorMessage);
-                            }
-                        }
+                        foreach (var error in errors)
+                        foreach (var message in error.Errors)
+                            fullErrors.Append(message.ErrorMessage);
 
                         result.ContentTypes.Add(MediaTypeNames.Application.Json);
                         result.Value = new API.Response(400, fullErrors.ToString());
@@ -116,7 +97,7 @@ namespace DevBin {
                     Description = "Fetch and create pastes with the DevBin API",
                     Contact = new OpenApiContact {
                         Name = "AlexDevs",
-                        Url = new Uri("https://alexdevs.pw"),
+                        Url = new Uri("https://alexdevs.pw")
                     }
                 });
 
@@ -131,13 +112,13 @@ namespace DevBin {
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
             app.UseStatusCodePagesWithReExecute("/Error", "?code={0}");
             app.UseHsts();
+            
 
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
             }
             else {
                 app.UseExceptionHandler("/Error");
-                app.UseHsts();
             }
 
 

@@ -10,11 +10,11 @@
 }
 
 <div class="row mx-lg-5">
-    @foreach ( Paste paste in pastes ) {
+    @foreach (Paste paste in pastes) {
         //<a href="/@paste.ID">@(paste.Title ?? paste.ID)</a>
 
         string pasteTitle = paste.Title.Length > 0 ? paste.Title : paste.ID;
-        if ( pasteTitle.Length >= 48 ) {
+        if (pasteTitle.Length >= 48) {
             pasteTitle = pasteTitle.Substring(0, Math.Min(pasteTitle.Length, 48)) + "…";
         }
 

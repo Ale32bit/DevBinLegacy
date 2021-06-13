@@ -29,9 +29,7 @@ namespace DevBin.API {
             Paste paste = database.FetchPaste(id);
 
 
-            if (paste != null) {
-                return Ok(paste);
-            }
+            if (paste != null) return Ok(paste);
 
             return NotFound(new Response(404, "Paste not found", false));
         }
@@ -49,20 +47,15 @@ namespace DevBin.API {
         [Produces("application/json")]
         [Consumes("application/json")]
         public ActionResult Create([FromBody] UserPaste userPaste) {
-            if (!ModelState.IsValid) {
-                return BadRequest(new Response(400, "Invalid JSON data", false));
-            }
+            if (!ModelState.IsValid) return BadRequest(new Response(400, "Invalid JSON data", false));
 
 
-            if (userPaste.Content == null || userPaste.Title == null) {
+            if (userPaste.Content == null || userPaste.Title == null)
                 return BadRequest(new Response(400, "Missing fields", false));
-            }
 
-            if (userPaste.AsGuest) {
-                if (userPaste.Exposure == Paste.Exposures.Private || userPaste.Exposure == Paste.Exposures.Encrypted) {
+            if (userPaste.AsGuest)
+                if (userPaste.Exposure == Paste.Exposures.Private || userPaste.Exposure == Paste.Exposures.Encrypted)
                     userPaste.Exposure = Paste.Exposures.Unlisted;
-                }
-            }
 
             Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
             PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
@@ -71,7 +64,7 @@ namespace DevBin.API {
                 Title = userPaste.Title,
                 Exposure = userPaste.Exposure,
                 Syntax = userPaste.Syntax ?? "plaintext",
-                ContentCache = userPaste.Content.Substring(0, Math.Min(userPaste.Content.Length, 64)),
+                ContentCache = userPaste.Content.Substring(0, Math.Min(userPaste.Content.Length, 64))
             };
 
             string id = database.Upload(paste);

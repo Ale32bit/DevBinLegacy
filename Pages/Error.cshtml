@@ -6,20 +6,16 @@
 
 <h1 class="text-danger text-center">Error @(Model.ErrorStatusCode ?? "")</h1>
 <h2 class="text-danger text-center">
-    @if ( Model.ErrorDescription != null ) {
-        <text>@Model.ErrorDescription</text>
-    } else {
-        <text>An error occurred while processing your request.</text>
-    }
+    @(Model.ErrorDescription ?? "An error occurred while processing your request.")
 </h2>
 
-@if ( Model.ShowOriginalURL ) {
+@if (Model.ShowOriginalURL) {
     <p>
         <strong>Original URL:</strong> <code>@Model.OriginalURL</code>
     </p>
 }
 
-@if ( Model.ShowRequestId ) {
+@if (Model.ShowRequestId) {
     <p>
         <strong>Request ID:</strong> <code>@Model.RequestId</code>
     </p>
