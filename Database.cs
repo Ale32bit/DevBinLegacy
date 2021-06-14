@@ -5,7 +5,16 @@ using System.Collections.Generic;
 namespace DevBin {
     public class Database {
         public const string CreateSQL =
-            @"CREATE TABLE IF NOT EXISTS `pastes` (
+            @"CREATE TABLE IF NOT EXISTS `users` (
+  `userId` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(64) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  PRIMARY KEY (`userId`),
+  UNIQUE KEY `Unique` (`username`,`email`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `pastes` (
   `id` varchar(8) NOT NULL,
   `authorId` int(11) DEFAULT NULL,
   `title` varchar(255) NOT NULL DEFAULT 'Unnamed paste',
@@ -20,14 +29,15 @@ namespace DevBin {
   CONSTRAINT `Author` FOREIGN KEY (`authorId`) REFERENCES `users` (`userId`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `users` (
-  `userId` int(11) NOT NULL AUTO_INCREMENT,
-  `username` varchar(64) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `Unique` (`username`,`email`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;";
+CREATE TABLE IF NOT EXISTS `session_tokens` (
+	`token` VARCHAR(256) NOT NULL COLLATE 'utf8_general_ci',
+	`userId` INT(11) NOT NULL DEFAULT '0',
+	PRIMARY KEY (`token`) USING BTREE,
+	INDEX `UserID` (`userId`) USING BTREE,
+	CONSTRAINT `UserID` FOREIGN KEY (`userId`) REFERENCES `devbin`.`users` (`userId`) ON UPDATE NO ACTION ON DELETE CASCADE
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB;";
 
         public string ConnectionString { get; set; }
 
@@ -40,10 +50,36 @@ CREATE TABLE IF NOT EXISTS `users` (
             MySqlCommand cmd = new(CreateSQL, conn);
             cmd.ExecuteNonQuery();
             conn.Close();
+
+            TryCreateEvent();
         }
 
         public MySqlConnection GetConnection() {
             return new(ConnectionString);
+        }
+
+        private bool TryCreateEvent() {
+            string sql = @"SET GLOBAL event_scheduler=ON;
+
+CREATE EVENT IF NOT EXISTS `clear_sessions`
+ON SCHEDULE EVERY 5 MINUTE 
+ON COMPLETION PRESERVE 
+ENABLE
+DO DELETE FROM session_tokens WHERE expireDate <= CURRENT_TIMESTAMP();";
+
+            var conn = GetConnection();
+
+            conn.Open();
+
+            MySqlCommand cmd = new(sql, conn);
+            try {
+                cmd.ExecuteNonQuery();
+            }
+            catch {
+                return false;
+            }
+
+            return true;
         }
 
 #nullable enable
@@ -55,7 +91,7 @@ CREATE TABLE IF NOT EXISTS `users` (
             int? authorId = null;
             MySqlCommand cmd =
                 new(
-                    $"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * from pastes WHERE pastes.id = @id"
+                    $"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * from pastes WHERE pastes.id = @id;"
                     , conn);
             cmd.Parameters.AddWithValue("@id", id);
             using (var reader = cmd.ExecuteReader()) {
@@ -141,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `users` (
                 conn.Open();
 
                 do {
-                    id = RandomID();
+                    id = RandomId();
                 } while (Exists(id, conn));
 
                 MySqlCommand cmd = new(@"INSERT INTO `pastes` (
@@ -160,7 +196,7 @@ CREATE TABLE IF NOT EXISTS `users` (
                 var affected = cmd.ExecuteNonQuery();
                 conn.Close();
             }
-
+            
             return id;
         }
 
@@ -171,7 +207,7 @@ CREATE TABLE IF NOT EXISTS `users` (
             if (conn.State != System.Data.ConnectionState.Open) conn.Open();
 
             MySqlCommand cmd = new(@"UPDATE pastes
-                                    SET (title = @title, syntax = @syntax, exposure = @exposure, contentCache = @contentCache)
+                                    SET title = @title, syntax = @syntax, exposure = @exposure, contentCache = @contentCache
                                     WHERE id = @id;");
 
             cmd.Parameters.AddWithValue("@id", paste.ID);
@@ -214,22 +250,19 @@ CREATE TABLE IF NOT EXISTS `users` (
             MySqlConnection conn = GetConnection();
             conn.Open();
 
-            User user;
-
             MySqlCommand cmd = new(@"SELECT * FROM users WHERE username = @loginDetail OR email = @loginDetail;", conn);
 
             cmd.Parameters.AddWithValue("@loginDetail", loginDetail);
 
-            using (var reader = cmd.ExecuteReader()) {
-                if (reader.Read()) {
-                    user = new User(reader.GetString("password")) {
-                        ID = reader.GetInt32("userId"),
-                        Username = reader.GetString("username"),
-                        Email = reader.GetString("email")
-                    };
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read()) {
+                User user = new User(reader.GetString("password")) {
+                    ID = reader.GetInt32("userId"),
+                    Username = reader.GetString("username"),
+                    Email = reader.GetString("email")
+                };
 
-                    return user;
-                }
+                return user;
             }
 
             return null;
@@ -250,7 +283,7 @@ CREATE TABLE IF NOT EXISTS `users` (
         }
 
 
-        internal static string RandomID() {
+        private static string RandomId() {
             string code = "";
 
             string alpha = "abcdefghijklmnopqrstuvwxyz";

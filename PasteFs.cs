@@ -43,8 +43,7 @@ namespace DevBin {
                     catch (InvalidDataException) {
                         return File.ReadAllText(Path.Combine(DataPath, id));
                     }
-                else
-                    return File.ReadAllText(Path.Combine(DataPath, id));
+                return File.ReadAllText(Path.Combine(DataPath, id));
             }
 
             return string.Empty;

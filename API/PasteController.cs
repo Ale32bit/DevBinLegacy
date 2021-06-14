@@ -83,7 +83,7 @@ namespace DevBin.API {
         /// <param name="userPaste">New paste data</param>
         /// <returns>Updated paste</returns>
         [Route("/api/v2/update/{id}")]
-        [HttpPut]
+        [HttpPost]
         [ProducesResponseType(typeof(Paste), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(Response), (int) HttpStatusCode.BadRequest)]
         [ProducesResponseType(typeof(Response), (int) HttpStatusCode.Unauthorized)]

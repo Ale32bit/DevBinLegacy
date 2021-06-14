@@ -12,7 +12,7 @@
 }
 
 <div class="row justify-content-between my-2">
-    <h6 class="m-0">By @(Model.Paste.Author != null ? Model.Paste.Author : "Guest")</h6>
+    <h6 class="m-0">By @(Model.Paste.Author ?? "Guest")</h6>
 
     <div class="col-9 col-sm-8">
         @if (Model.Paste.Exposure == Paste.Exposures.Encrypted) {
@@ -164,8 +164,7 @@
                 let pasteKey = document.getElementById("paste-key");
 
                 let pasteContent = document.getElementById("paste-content");
-                let res = decrypt(pasteContent.textContent, pasteKey.value);
-                pasteContent.textContent = res;
+                pasteContent.textContent = decrypt(pasteContent.textContent, pasteKey.value);
                 pasteContent.classList.remove("locked");
                 pasteContent.classList.remove("text-muted");
                 modal.hide();

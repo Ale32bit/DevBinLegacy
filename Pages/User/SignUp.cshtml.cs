@@ -33,6 +33,7 @@ namespace DevBin.Pages.User {
                 Email = emailAddress,
                 Username = username,
             };
+            
             var user = database.CreateUser(newUser, hashedPassword);
 
             return new JsonResult(new API.Response(200, "OK", true));
