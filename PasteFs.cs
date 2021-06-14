@@ -5,6 +5,7 @@ using System.Text;
 
 namespace DevBin {
     public class PasteFs {
+        public static PasteFs Instance = null;
         public string DataPath { get; set; }
         public bool UseCompression { get; set; }
 
@@ -14,6 +15,8 @@ namespace DevBin {
             if (!Directory.Exists(dataPath)) Directory.CreateDirectory(dataPath);
 
             Console.WriteLine("Paste data directory is " + DataPath);
+
+            Instance = this;
         }
 
         public void Write(string id, string content) {

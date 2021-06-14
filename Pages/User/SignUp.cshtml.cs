@@ -36,7 +36,9 @@ namespace DevBin.Pages.User {
             
             var user = database.CreateUser(newUser, hashedPassword);
 
-            return new JsonResult(new API.Response(200, "OK", true));
+            var token = user.GenerateSessionToken();
+
+            return new JsonResult(new API.Response(200, token, true));
         }
     }
 }

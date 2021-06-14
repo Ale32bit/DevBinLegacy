@@ -4,6 +4,8 @@ using System.Collections.Generic;
 
 namespace DevBin {
     public class Database {
+        public static Database Instance;
+        
         public const string CreateSQL =
             @"CREATE TABLE IF NOT EXISTS `users` (
   `userId` int(11) NOT NULL AUTO_INCREMENT,
@@ -52,6 +54,8 @@ ENGINE=InnoDB;";
             conn.Close();
 
             TryCreateEvent();
+
+            Instance = this;
         }
 
         public MySqlConnection GetConnection() {
@@ -59,13 +63,12 @@ ENGINE=InnoDB;";
         }
 
         private bool TryCreateEvent() {
-            string sql = @"SET GLOBAL event_scheduler=ON;
-
-CREATE EVENT IF NOT EXISTS `clear_sessions`
-ON SCHEDULE EVERY 5 MINUTE 
-ON COMPLETION PRESERVE 
-ENABLE
-DO DELETE FROM session_tokens WHERE expireDate <= CURRENT_TIMESTAMP();";
+            string sql = @"CREATE DEFINER=`devbin`@`localhost` EVENT `clear_expired_sessions`
+	ON SCHEDULE
+		EVERY 15 MINUTE
+	ON COMPLETION PRESERVE
+	ENABLE
+	DO DELETE FROM session_tokens WHERE timestamp < (NOW() - INTERVAL 30 DAY)";
 
             var conn = GetConnection();
 
@@ -135,7 +138,8 @@ DO DELETE FROM session_tokens WHERE expireDate <= CURRENT_TIMESTAMP();";
             conn.Open();
 
             MySqlCommand cmd =
-                new($"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT {n};", conn);
+                new(@"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT @n;", conn);
+            cmd.Parameters.AddWithValue("@n", n);
             using (var reader = cmd.ExecuteReader()) {
                 while (reader.Read())
                     pastes.Add(new Paste() {
@@ -156,7 +160,7 @@ DO DELETE FROM session_tokens WHERE expireDate <= CURRENT_TIMESTAMP();";
         public bool Exists(string id, MySqlConnection conn) {
             if (conn.State != System.Data.ConnectionState.Open) conn.Open();
 
-            MySqlCommand cmd = new($"SELECT * FROM `pastes` WHERE id = @id;", conn);
+            MySqlCommand cmd = new( @"SELECT * FROM `pastes` WHERE id = @id;", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = cmd.ExecuteReader();
             return reader.HasRows;
@@ -167,6 +171,7 @@ DO DELETE FROM session_tokens WHERE expireDate <= CURRENT_TIMESTAMP();";
             return Exists(id, conn);
         }
 
+        // TODO: Set author ID
         public string Upload(Paste paste) {
             string id;
 
@@ -196,7 +201,7 @@ DO DELETE FROM session_tokens WHERE expireDate <= CURRENT_TIMESTAMP();";
                 var affected = cmd.ExecuteNonQuery();
                 conn.Close();
             }
-            
+
             return id;
         }
 
@@ -280,6 +285,46 @@ DO DELETE FROM session_tokens WHERE expireDate <= CURRENT_TIMESTAMP();";
             cmd.Parameters.AddWithValue("@password", password);
 
             return cmd.ExecuteNonQuery() > 1 ? FetchUser(user.Email) : null;
+        }
+
+        public void InsertSessionToken(int userId, string token) {
+            MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd = new(@"INSERT INTO session_tokens (token, userId) VALUES (@token, @userId)", conn);
+            cmd.Parameters.AddWithValue("@token", token);
+            cmd.Parameters.AddWithValue("@userId", userId);
+
+            cmd.ExecuteNonQuery();
+            conn.Close();
+        }
+
+        public User? ResolveSessionToken(string token) {
+            MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd = new(@"SELECT * FROM session_tokens WHERE token = @token;", conn);
+            cmd.Parameters.AddWithValue("@token", token);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read()) {
+                var userId = reader.GetInt32("userId");
+
+                MySqlCommand ucmd = new(@"SELECT userId, username, email WHERE userId = @userId;", conn);
+                ucmd.Parameters.AddWithValue("@userId", userId);
+                using var ureader = ucmd.ExecuteReader();
+                if (ureader.Read()) {
+                    return new User {
+                        ID = userId,
+                        Email = ureader.GetString("email"),
+                        Username = ureader.GetString("username"),
+                    };
+                }
+            }
+
+            conn.Close();
+
+            return null;
         }
 
 

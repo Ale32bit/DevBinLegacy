@@ -14,12 +14,11 @@ namespace DevBin.Pages.User {
             var database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
             var user = database.FetchUser(loginName);
 
-            if (user != null && user.PasswordMatch(password)) {
-                return new JsonResult(new API.Response(200, "login", true));
-            }
-            else {
+            if (user == null || !user.PasswordMatch(password))
                 return new JsonResult(new API.Response(400, "Wrong password or user does not exist", false));
-            }
+            var token = user.GenerateSessionToken();
+            return new JsonResult(new API.Response(200, token, true));
+
         }
     }
 }

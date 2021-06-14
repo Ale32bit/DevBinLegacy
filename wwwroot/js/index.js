@@ -57,8 +57,7 @@ function validate() {
         console.log("encrypting...");
         let key = encryptKey.value;
         let pasteRaw = pasteField.value;
-        let enc = encrypt(pasteRaw, key);
-        pasteField.value = enc;
+        pasteField.value = encrypt(pasteRaw, key);
         encryptKey.value = ""; // for safety reasons
         document.forms[0].submit();
     } else {
@@ -66,11 +65,11 @@ function validate() {
     }
 }
 
-if (document.location.protocol !== "https:") { // SECURE CONTEXT
+/*if (document.location.protocol !== "https:") { // SECURE CONTEXT
     let option = document.getElementById("encrypt-option");
     option.disabled = true;
     option.textContent += "?";
     option.title = "'Encrypted' option only works in secure contexts!";
     option.style.cursor = "help";
-}
+}*/
 

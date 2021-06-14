@@ -1,15 +1,29 @@
 ﻿using System.Net.Mail;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Http;
 
 namespace DevBin {
     public class User {
         public int ID { get; set; }
         public string Username { get; set; }
         public string Email { get; set; }
-        private readonly string Password;
+        private readonly string? Password;
+
 
         public User(string password) {
             Password = password;
+        }
+
+        public User() {
+            Password = null;
+        }
+
+        public string GenerateSessionToken() {
+            var token = Utils.RandomString(256);
+
+            Database.Instance.InsertSessionToken(ID, token);
+            
+            return token;
         }
 
         public bool PasswordMatch(string password) {
@@ -34,6 +48,8 @@ namespace DevBin {
                 return false;
             }
         }
+        
+        
     }
 
     public class UserProfile {

@@ -141,7 +141,7 @@ namespace DevBin {
                 c.RoutePrefix = "docs";
             });
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
