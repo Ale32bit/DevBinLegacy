@@ -112,7 +112,7 @@ namespace DevBin {
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
             app.UseStatusCodePagesWithReExecute("/Error", "?code={0}");
             app.UseHsts();
-            
+
 
             if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
@@ -130,6 +130,14 @@ namespace DevBin {
                         Secure = false,
                     });
                 }*/
+
+                if (!context.Request.Cookies.TryGetValue("devbin_session_token", out var token)) return next();
+                if (string.IsNullOrEmpty(token)) return next();
+                var user = Database.Instance.ResolveSessionToken(token);
+                if (user != null) {
+                    context.Items.Add("user", user);
+                }
+
                 return next();
             });
 

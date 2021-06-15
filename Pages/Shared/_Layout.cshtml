@@ -1,4 +1,11 @@
-﻿@{
+﻿@using System.Diagnostics
+@{
+    User user = null;
+    var loggedIn = Context.Items.TryGetValue("user", out var tUser);
+    if (loggedIn && tUser != null) {
+        user = (User) tUser;
+    }
+    Console.WriteLine("user is {0} logged in? {1}",user, loggedIn);
 }
 
 <!doctype html>
@@ -55,7 +62,12 @@
 
                 </ul>
                 <div class="d-flex">
-                    <a href="/user/login" class="btn btn-outline-light me-2" role="button"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    @if (loggedIn) {
+                        
+                    }
+                    else {
+                        <a href="/user/login" class="btn btn-outline-light me-2" role="button"><i class="fas fa-sign-in-alt"></i> Sign In</a>
+                    }
                 </div>
             </div>
         </div>
@@ -87,4 +99,3 @@
 
 </body>
 </html>
-

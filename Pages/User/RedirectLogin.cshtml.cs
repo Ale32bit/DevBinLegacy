@@ -15,9 +15,12 @@ namespace DevBin.Pages.User {
                 return Redirect("/");
             }
 
-            HttpContext.Response.Cookies.Append("devbin_session_token", token, new CookieOptions() {
-                HttpOnly = false,
+            HttpContext.Response.Cookies.Append("devbin_session_token", token, new CookieOptions {
+                HttpOnly = true,
                 IsEssential = true,
+                Path = "/",
+                SameSite = SameSiteMode.Strict,
+                
             });
 
             return Redirect("/");

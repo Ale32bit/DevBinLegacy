@@ -273,6 +273,28 @@ ENGINE=InnoDB;";
             return null;
         }
 
+        public User? FetchUser(int id) {
+            MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd = new(@"SELECT * FROM users WHERE userId = @userId;", conn);
+
+            cmd.Parameters.AddWithValue("@userId", id);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read()) {
+                User user = new User(reader.GetString("password")) {
+                    ID = reader.GetInt32("userId"),
+                    Username = reader.GetString("username"),
+                    Email = reader.GetString("email")
+                };
+
+                return user;
+            }
+
+            return null;
+        }
+
         public User? CreateUser(User user, string password) {
             MySqlConnection conn = GetConnection();
             conn.Open();
@@ -309,17 +331,8 @@ ENGINE=InnoDB;";
             using var reader = cmd.ExecuteReader();
             if (reader.Read()) {
                 var userId = reader.GetInt32("userId");
-
-                MySqlCommand ucmd = new(@"SELECT userId, username, email WHERE userId = @userId;", conn);
-                ucmd.Parameters.AddWithValue("@userId", userId);
-                using var ureader = ucmd.ExecuteReader();
-                if (ureader.Read()) {
-                    return new User {
-                        ID = userId,
-                        Email = ureader.GetString("email"),
-                        Username = ureader.GetString("username"),
-                    };
-                }
+                conn.Close();
+                return FetchUser(userId);
             }
 
             conn.Close();
