@@ -121,6 +121,10 @@ function switchValidation(el, valid) {
     }
 }
 
+function setSessionToken(token) {
+    document.cookie = "devbin_session_token=" + token;
+}
+
 function validateLogin(form) {
     let emailField = document.getElementById("login-email-field");
     let passwordField = document.getElementById("login-password-field");
@@ -137,6 +141,8 @@ function validateLogin(form) {
         .then(data => {
             if (data.ok){
                 errorLabel.innerText = "";
+                setSessionToken(data.message);
+                document.location = "/";
             } else {
                 errorLabel.innerText = data.message;
             }
@@ -170,6 +176,8 @@ async function validateSignup(form) {
             .then(data => {
                 if (data.ok){
                     errorLabel.innerText = "";
+                    setSessionToken(data.message);
+                    document.location = "/";
                 } else {
                     errorLabel.innerText = data.message;
                 }
