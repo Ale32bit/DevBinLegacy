@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using System;
+using Org.BouncyCastle.Ocsp;
 using static DevBin.Paste;
 
 namespace DevBin.Pages {
@@ -48,17 +49,15 @@ namespace DevBin.Pages {
                     _ => Exposures.Public
                 };
 
+            var asGuest = !HttpContext.Items.ContainsKey("logged_user");
+            bool.TryParse(Request.Form["paste-as-guest"].ToString(), out asGuest);
+            
             paste.ContentCache = content.Substring(0, Math.Min(64, content.Length));
 
             paste.Date = DateTime.Now;
 
-            Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
-            PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
-
-            var id = database.Upload(paste);
-
-
-            pasteFs.Write(id, content);
+            var id = Database.Instance.Upload(paste, (!asGuest) ? (DevBin.User?)HttpContext.Items["logged_user"] : null);
+            PasteFs.Instance.Write(id, content);
 
             HttpContext.Response.Redirect(id);
         }

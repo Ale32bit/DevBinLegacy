@@ -20,7 +20,6 @@ namespace DevBin.Pages.User {
                 IsEssential = true,
                 Path = "/",
                 SameSite = SameSiteMode.Strict,
-                
             });
 
             return Redirect("/");

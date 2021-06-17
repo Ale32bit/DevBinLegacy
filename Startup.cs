@@ -13,6 +13,7 @@ using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mime;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Http;
@@ -123,19 +124,22 @@ namespace DevBin {
 
 
             app.Use((context, next) => {
-                /*if(!context.Request.Cookies.ContainsKey("devbin_session")) {
-                    context.Response.Cookies.Append("devbin_session", Utils.RandomString(64), new CookieOptions() {
-                        IsEssential = true,
-                        HttpOnly = true,
-                        Secure = false,
-                    });
-                }*/
+                // Create a session identifier based on the user agent, ip address and current day
+                var sessionIdByte =
+                    SHA256.HashData(Encoding.ASCII.GetBytes(
+                        context.Request.Headers["User-Agent"] +
+                        context.Connection.RemoteIpAddress +
+                        DateTime.Today
+                    ));
+
+                string sessionId = BitConverter.ToString(sessionIdByte).Replace("-", "");
+                context.Items.TryAdd("session_id", sessionId);
 
                 if (!context.Request.Cookies.TryGetValue("devbin_session_token", out var token)) return next();
                 if (string.IsNullOrEmpty(token)) return next();
                 var user = Database.Instance.ResolveSessionToken(token);
                 if (user != null) {
-                    context.Items.Add("user", user);
+                    context.Items.TryAdd("logged_user", user);
                 }
 
                 return next();

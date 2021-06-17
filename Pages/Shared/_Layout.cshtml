@@ -1,11 +1,9 @@
-﻿@using System.Diagnostics
-@{
-    User user = null;
-    var loggedIn = Context.Items.TryGetValue("user", out var tUser);
+﻿@{
+    User? user = null;
+    var loggedIn = Context.Items.TryGetValue("logged_user", out var tUser);
     if (loggedIn && tUser != null) {
         user = (User) tUser;
     }
-    Console.WriteLine("user is {0} logged in? {1}",user, loggedIn);
 }
 
 <!doctype html>
@@ -63,7 +61,22 @@
                 </ul>
                 <div class="d-flex">
                     @if (loggedIn) {
-                        
+                        <div class="dropdown">
+                            <a class="btn btn-outline-light dropdown-toggle me-2" href="#" role="button" id="user-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> @user.Username</a>
+
+                            <ul class="dropdown-menu dropdown-menu-dark bg-dark border-light" aria-labelledby="user-menu">
+                                <li>
+                                    <a class="dropdown-item" href="/user/pastes">Your pastes</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="/user/settings">Settings</a>
+                                </li>
+                                <li><hr class="dropdown-divider bg-light"></li>
+                                <li>
+                                    <a class="dropdown-item bg-danger" href="/user/logout">Logout</a>
+                                </li>
+                            </ul>
+                        </div>
                     }
                     else {
                         <a href="/user/login" class="btn btn-outline-light me-2" role="button"><i class="fas fa-sign-in-alt"></i> Sign In</a>

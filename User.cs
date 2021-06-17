@@ -18,6 +18,10 @@ namespace DevBin {
             Password = null;
         }
 
+        public override string ToString() {
+            return Username;
+        }
+
         public string GenerateSessionToken() {
             var token = Utils.RandomString(256);
 

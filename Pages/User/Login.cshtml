@@ -137,7 +137,7 @@ function validateLogin(form) {
         .then(data => {
             if (data.ok){
                 errorLabel.innerText = "";
-                document.location = "/user/redirectlogin?token=" + encodeURI(data.message);
+                document.location = "/user/redirect?token=" + encodeURI(data.message);
             } else {
                 errorLabel.innerText = data.message;
             }
@@ -172,7 +172,7 @@ async function validateSignup(form) {
                 if (data.ok){
                     errorLabel.innerText = "";
                     
-                    document.location = "/user/redirectlogin?token=" + encodeURI(data.message);
+                    document.location = "/user/redirect?token=" + encodeURI(data.message);
                 } else {
                     errorLabel.innerText = data.message;
                 }

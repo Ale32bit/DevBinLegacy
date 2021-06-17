@@ -1,15 +1,22 @@
-﻿@page
-@model LatestModel
+@page
+@model DevBin.Pages.User.PastesModel
 @{
-    ViewData["Title"] = "Latest Pastes";
+    ViewData["Title"] = "Your Pastes";
+    User? user = null;
+    var loggedIn = HttpContext.Items.TryGetValue("logged_user", out var tUser);
+    if (loggedIn && tUser != null) {
+        user = (User) tUser;
+    }
+    else {
+        Redirect("/user/login");
+        return;
+    }
+    
+    Paste[] pastes = Database.Instance.GetUserPastes(user);
 
-    Paste[] pastes = Database.Instance.GetLatest();
 }
 
 <div class="row mx-lg-5">
-    @if (pastes.Length == 0) {
-        <h2 class="text-muted fst-italic text-center">*crickets*</h2>
-    }
     @foreach (Paste paste in pastes) {
         //<a href="/@paste.ID">@(paste.Title ?? paste.ID)</a>
 

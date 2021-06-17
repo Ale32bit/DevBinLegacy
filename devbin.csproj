@@ -30,4 +30,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Pages\User\Login.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\User\Logout.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\User\RedirectLogin.cshtml" />
+    <_ContentIncludedByDefault Remove="Pages\User\SignUp.cshtml" />
+  </ItemGroup>
+
 </Project>

@@ -1,11 +1,12 @@
-﻿using MySql.Data.MySqlClient;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using MySql.Data.MySqlClient;
 
 namespace DevBin {
     public class Database {
         public static Database Instance;
-        
+
         public const string CreateSQL =
             @"CREATE TABLE IF NOT EXISTS `users` (
   `userId` int(11) NOT NULL AUTO_INCREMENT,
@@ -34,6 +35,7 @@ CREATE TABLE IF NOT EXISTS `pastes` (
 CREATE TABLE IF NOT EXISTS `session_tokens` (
 	`token` VARCHAR(256) NOT NULL COLLATE 'utf8_general_ci',
 	`userId` INT(11) NOT NULL DEFAULT '0',
+	`timestamp` TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
 	PRIMARY KEY (`token`) USING BTREE,
 	INDEX `UserID` (`userId`) USING BTREE,
 	CONSTRAINT `UserID` FOREIGN KEY (`userId`) REFERENCES `devbin`.`users` (`userId`) ON UPDATE NO ACTION ON DELETE CASCADE
@@ -89,17 +91,18 @@ ENGINE=InnoDB;";
         // This method also increases views field!
         public Paste? FetchPaste(string id, MySqlConnection conn, bool updateViews = false) {
             Paste? paste = null;
-            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+            if (conn.State != ConnectionState.Open) conn.Open();
 
             int? authorId = null;
             MySqlCommand cmd =
                 new(
-                    $"{(updateViews ? "UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "")} SELECT * from pastes WHERE pastes.id = @id;"
+                    (updateViews ? @"UPDATE `pastes` SET views = views+1 WHERE id = @id;" : "") +
+                    @"SELECT * from pastes WHERE pastes.id = @id;"
                     , conn);
             cmd.Parameters.AddWithValue("@id", id);
             using (var reader = cmd.ExecuteReader()) {
                 if (reader.Read()) {
-                    paste = new Paste() {
+                    paste = new Paste {
                         ID = reader.GetString("id"),
                         Title = reader.GetString("title"),
                         Syntax = reader.GetString("syntax"),
@@ -112,7 +115,6 @@ ENGINE=InnoDB;";
                     if (!reader.IsDBNull(reader.GetOrdinal("authorId"))) authorId = reader.GetInt32("authorId");
                 }
             }
-
 
             if (authorId != null && paste != null) {
                 cmd = new MySqlCommand(@"SELECT username FROM `users` WHERE userId = @userId;", conn);
@@ -141,8 +143,9 @@ ENGINE=InnoDB;";
                 new(@"SELECT * FROM `pastes` WHERE exposure = 0 ORDER BY timestamp DESC LIMIT @n;", conn);
             cmd.Parameters.AddWithValue("@n", n);
             using (var reader = cmd.ExecuteReader()) {
-                while (reader.Read())
-                    pastes.Add(new Paste() {
+                while (reader.Read()) {
+                    int? authorId = null;
+                    var paste = new Paste {
                         ID = reader.GetString("id"),
                         Title = reader.GetString("title"),
                         Syntax = reader.GetString("syntax"),
@@ -150,7 +153,21 @@ ENGINE=InnoDB;";
                         Date = reader.GetDateTime("timestamp"),
                         Views = reader.GetUInt32("views"),
                         ContentCache = reader.GetString("contentCache") ?? ""
-                    });
+                    };
+
+                    if (!reader.IsDBNull(reader.GetOrdinal("authorId"))) authorId = reader.GetInt32("authorId");
+                    if (authorId != null) {
+                        var uconn = GetConnection();
+                        uconn.Open();
+                        var ucmd = new MySqlCommand(@"SELECT username FROM `users` WHERE userId = @userId;", uconn);
+                        ucmd.Parameters.AddWithValue("@userId", authorId);
+                        using var ureader = ucmd.ExecuteReader();
+                        if (ureader.Read()) paste.Author = ureader.GetString("username");
+                        uconn.Close();
+                    }
+
+                    pastes.Add(paste);
+                }
             }
 
             conn.Close();
@@ -158,9 +175,9 @@ ENGINE=InnoDB;";
         }
 
         public bool Exists(string id, MySqlConnection conn) {
-            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+            if (conn.State != ConnectionState.Open) conn.Open();
 
-            MySqlCommand cmd = new( @"SELECT * FROM `pastes` WHERE id = @id;", conn);
+            MySqlCommand cmd = new(@"SELECT * FROM `pastes` WHERE id = @id;", conn);
             cmd.Parameters.AddWithValue("@id", id);
             using var reader = cmd.ExecuteReader();
             return reader.HasRows;
@@ -172,35 +189,34 @@ ENGINE=InnoDB;";
         }
 
         // TODO: Set author ID
-        public string Upload(Paste paste) {
+        public string Upload(Paste paste, User? author = null) {
             string id;
 
             paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
             paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
 
-            using (MySqlConnection conn = GetConnection()) {
-                conn.Open();
+            using MySqlConnection conn = GetConnection();
+            conn.Open();
 
-                do {
-                    id = RandomId();
-                } while (Exists(id, conn));
+            do {
+                id = RandomId();
+            } while (Exists(id, conn));
 
-                MySqlCommand cmd = new(@"INSERT INTO `pastes` (
+            MySqlCommand cmd = new(@"INSERT INTO `pastes` (
                     `id`, `authorId`, `title`, `syntax`, `exposure`, `contentCache`
                 ) VALUES (
                     @id, @authorId, @title, @syntax, @exposure, @contentCache
                 );", conn);
 
-                cmd.Parameters.AddWithValue("@id", id);
-                cmd.Parameters.AddWithValue("@authorId", null);
-                cmd.Parameters.AddWithValue("@title", paste.Title);
-                cmd.Parameters.AddWithValue("@syntax", paste.Syntax);
-                cmd.Parameters.AddWithValue("@exposure", (byte) paste.Exposure);
-                cmd.Parameters.AddWithValue("@contentCache", paste.ContentCache);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@authorId", author?.ID);
+            cmd.Parameters.AddWithValue("@title", paste.Title);
+            cmd.Parameters.AddWithValue("@syntax", paste.Syntax);
+            cmd.Parameters.AddWithValue("@exposure", (byte) paste.Exposure);
+            cmd.Parameters.AddWithValue("@contentCache", paste.ContentCache);
 
-                var affected = cmd.ExecuteNonQuery();
-                conn.Close();
-            }
+            cmd.ExecuteNonQuery();
+            conn.Close();
 
             return id;
         }
@@ -209,7 +225,7 @@ ENGINE=InnoDB;";
             paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
             paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
 
-            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+            if (conn.State != ConnectionState.Open) conn.Open();
 
             MySqlCommand cmd = new(@"UPDATE pastes
                                     SET title = @title, syntax = @syntax, exposure = @exposure, contentCache = @contentCache
@@ -230,7 +246,7 @@ ENGINE=InnoDB;";
         }
 
         public bool Delete(Paste paste, MySqlConnection conn) {
-            if (conn.State != System.Data.ConnectionState.Open) conn.Open();
+            if (conn.State != ConnectionState.Open) conn.Open();
 
             MySqlCommand cmd = new(@"DELETE FROM pastes WHERE id = @id;");
 
@@ -246,7 +262,7 @@ ENGINE=InnoDB;";
 
         public User CreateUser(string name, string email, string password) {
             string hash = BCrypt.Net.BCrypt.EnhancedHashPassword(password);
-            User user = new(hash) { };
+            User user = new(hash);
 
             return user;
         }
@@ -261,7 +277,7 @@ ENGINE=InnoDB;";
 
             using var reader = cmd.ExecuteReader();
             if (reader.Read()) {
-                User user = new User(reader.GetString("password")) {
+                User user = new(reader.GetString("password")) {
                     ID = reader.GetInt32("userId"),
                     Username = reader.GetString("username"),
                     Email = reader.GetString("email")
@@ -283,7 +299,7 @@ ENGINE=InnoDB;";
 
             using var reader = cmd.ExecuteReader();
             if (reader.Read()) {
-                User user = new User(reader.GetString("password")) {
+                User user = new(reader.GetString("password")) {
                     ID = reader.GetInt32("userId"),
                     Username = reader.GetString("username"),
                     Email = reader.GetString("email")
@@ -321,11 +337,24 @@ ENGINE=InnoDB;";
             conn.Close();
         }
 
-        public User? ResolveSessionToken(string token) {
+        public void InvalidateSessionToken(string token) {
             MySqlConnection conn = GetConnection();
             conn.Open();
 
-            MySqlCommand cmd = new(@"SELECT * FROM session_tokens WHERE token = @token;", conn);
+            MySqlCommand cmd = new(@"DELETE FROM session_tokens WHERE token = @token;", conn);
+            cmd.Parameters.AddWithValue("@token", token);
+
+            cmd.ExecuteNonQuery();
+            conn.Close();
+        }
+
+        public User? ResolveSessionToken(string token, bool update = true) {
+            MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            // The UPDATE part is just to trigger the timestamp update in the SQL server
+            MySqlCommand cmd = new((update ? @"UPDATE session_tokens SET token = token WHERE token = @token;" : "") +
+                                   @"SELECT * FROM session_tokens WHERE token = @token;", conn);
             cmd.Parameters.AddWithValue("@token", token);
 
             using var reader = cmd.ExecuteReader();
@@ -339,7 +368,6 @@ ENGINE=InnoDB;";
 
             return null;
         }
-
 
         private static string RandomId() {
             string code = "";
@@ -355,6 +383,35 @@ ENGINE=InnoDB;";
             }
 
             return code;
+        }
+
+        public Paste[] GetUserPastes(User user) {
+            List<Paste> pastes = new();
+            MySqlConnection conn = GetConnection();
+
+            conn.Open();
+
+            MySqlCommand cmd =
+                new(@"SELECT * FROM `pastes` WHERE authorId = @userId;", conn);
+            cmd.Parameters.AddWithValue("@userId", user.ID);
+            using (var reader = cmd.ExecuteReader()) {
+                while (reader.Read()) {
+                    var paste = new Paste {
+                        ID = reader.GetString("id"),
+                        Title = reader.GetString("title"),
+                        Syntax = reader.GetString("syntax"),
+                        Exposure = (Paste.Exposures) reader.GetByte("exposure"),
+                        Date = reader.GetDateTime("timestamp"),
+                        Views = reader.GetUInt32("views"),
+                        ContentCache = reader.GetString("contentCache") ?? "",
+                        Author = user.Username,
+                    };
+                    pastes.Add(paste);
+                }
+            }
+
+            conn.Close();
+            return pastes.ToArray();
         }
     }
 }
