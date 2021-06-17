@@ -57,12 +57,13 @@
                     <li>
                         <a href="/latest" class="btn btn-outline-light" role="button"><i class="fas fa-list-ul"></i> Latest Pastes</a>
                     </li>
-
                 </ul>
                 <div class="d-flex">
                     @if (loggedIn) {
                         <div class="dropdown">
-                            <a class="btn btn-outline-light dropdown-toggle me-2" href="#" role="button" id="user-menu" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user"></i> @user.Username</a>
+                            <a class="btn btn-outline-light dropdown-toggle me-2" href="#" role="button" id="user-menu" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user"></i> @user.Username
+                            </a>
 
                             <ul class="dropdown-menu dropdown-menu-dark bg-dark border-light" aria-labelledby="user-menu">
                                 <li>
@@ -71,7 +72,9 @@
                                 <li>
                                     <a class="dropdown-item" href="/user/settings">Settings</a>
                                 </li>
-                                <li><hr class="dropdown-divider bg-light"></li>
+                                <li>
+                                    <hr class="dropdown-divider bg-light">
+                                </li>
                                 <li>
                                     <a class="dropdown-item bg-danger" href="/user/logout">Logout</a>
                                 </li>

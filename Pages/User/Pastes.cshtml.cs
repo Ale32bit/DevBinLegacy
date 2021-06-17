@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace DevBin.Pages.User {
     public class PastesModel : PageModel {
-        public void OnGet() {
-            
+        [Route("/user/pastes/{user}")]
+        public void UserPastes(string user) {
+            Redirect("/");
         }
     }
 }

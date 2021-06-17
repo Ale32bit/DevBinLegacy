@@ -2,7 +2,9 @@
 @model IndexModel
 @{
     if (Model.IsCloning) {
-        ViewData["Title"] = "Cloning " + Model.Clone.ID;
+        ViewData["Title"] = "Cloning " + Model.ContextPaste.ID;
+    } else if (Model.IsEditing) {
+        ViewData["Title"] = "Editing " + (string.IsNullOrEmpty(Model.ContextPaste.Title) ? Model.ContextPaste.Title : Model.ContextPaste.ID);
     }
     ViewData["IncludeHighlight"] = true;
     var isLoggedIn = HttpContext.Items.ContainsKey("logged_user");
@@ -14,21 +16,21 @@
         <div class="col-sm-8 has-validation">
             <textarea id="paste-input" name="paste-input" class="form-control bg-dark text-light font-monospace outline-dark"
                       placeholder="<code> /dev/bin </code>" wrap="soft" required autofocus autocomplete="off"
-                      onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()">@(Model.IsCloning ? Model.CloneContent : "")</textarea>
+                      onkeydown="autosize()" onkeypress="autosize()" onkeyup="autosize()">@(Model.IsCloning || Model.IsEditing ? Model.ContextContent : "")</textarea>
         </div>
 
         <div class="col-sm-4">
             <div class="row">
                 <div class="col-6">
                     <label for="paste-title" class="form-label" autocomplete="off">Paste Title</label>
-                    <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste"/>
+                    <input id="paste-title" name="paste-title" type="text" class="form-control bg-dark text-light" placeholder="My paste" value="@(Model.IsEditing ? Model.ContextPaste.Title : "")"/>
                 </div>
                 <div class="col-6">
                     <label for="paste-syntax" class="form-label">Paste Syntax</label>
                     <select id="paste-syntax" name="paste-syntax" class="form-select bg-dark text-light">
                         @{
                             if (Model.IsCloning) {
-                                <option value="@Model.Clone.Syntax" selected>@Model.Clone.Syntax</option>
+                                <option value="@Model.ContextPaste.Syntax" selected>@Model.ContextPaste.Syntax</option>
                             }
                             else {
                                 <option value="plaintext" selected>None</option>
@@ -47,7 +49,9 @@
                         @if (isLoggedIn) {
                             <option value="2">Private</option>
                         }
-                        <option value="3" id="encrypt-option">Encrypted</option>
+                        @if (!Model.IsEditing) {
+                            <option value="3" id="encrypt-option">Encrypted</option>
+                        }
                     </select>
                 </div>
 
@@ -60,15 +64,19 @@
             <div class="row pt-2">
                 <div class="col-6">
                     <div class="form-check">
-
-                        <input class="form-check-input" type="checkbox" value="" id="paste-as-guest" @(isLoggedIn ? "" : "checked disabled")>
+                        <input class="form-check-input" type="checkbox" name="paste-as-guest" id="paste-as-guest" @(Model.IsEditing ? "disabled" : "" ) @(isLoggedIn ? "" : "disabled checked")>
                         <label class="form-check-label" for="paste-as-guest">
                             Create as guest
                         </label>
                     </div>
                 </div>
                 <div class="col-6">
-                    <button type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Create Paste</button>
+                    @if (Model.IsEditing) {
+                        <button type="submit" class="form-control btn btn-light"><i class="fas fa-edit"></i> Edit Paste</button>
+                    }
+                    else {
+                        <button type="submit" class="form-control btn btn-light"><i class="fas fa-plus"></i> Create Paste</button>
+                    }
                 </div>
             </div>
         </div>

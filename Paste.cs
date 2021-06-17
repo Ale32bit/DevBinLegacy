@@ -23,6 +23,7 @@ namespace DevBin {
         public string Syntax { get; set; }
         public Exposures Exposure { get; set; }
         public string? Author { get; set; }
+        public int? AuthorID { get; set; }
         public DateTime Date { get; set; }
         public uint Views { get; set; }
         public string ContentCache { get; set; }

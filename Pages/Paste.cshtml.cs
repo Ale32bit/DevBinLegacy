@@ -14,8 +14,6 @@ namespace DevBin.Pages {
         }
 
         public void OnGet() {
-            PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
-
             HttpContext.Request.RouteValues.TryGetValue("paste", out var paste);
 
             Paste = (Paste) paste;
@@ -25,7 +23,7 @@ namespace DevBin.Pages {
                 Paste.Exposures.Encrypted => "Encrypted",
                 _ => "Public"
             };
-            PasteContent = pasteFs.Read(Paste.ID);
+            PasteContent = PasteFs.Instance.Read(Paste.ID);
         }
     }
 }

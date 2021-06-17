@@ -15,7 +15,7 @@
 
         string pasteTitle = paste.Title.Length > 0 ? paste.Title : paste.ID;
         if (pasteTitle.Length >= 48) {
-            pasteTitle = pasteTitle.Substring(0, Math.Min(pasteTitle.Length, 48)) + "…";
+            pasteTitle = pasteTitle[..Math.Min(pasteTitle.Length, 48)] + "…";
         }
 
         <div class="col-4">
@@ -23,7 +23,7 @@
                 <div class="card text-white bg-dark outline-dark mb-3">
                     <div class="card-body border-light">
                         <h5 class="card-title">@pasteTitle</h5>
-                        <p class="card-text font-monospace text-muted fst-italic lh-1">@paste.ContentCache.Substring(0, Math.Min(paste.ContentCache.Length, 64))…</p>
+                        <p class="card-text font-monospace text-muted fst-italic lh-1">@paste.ContentCache[..Math.Min(paste.ContentCache.Length, 64)]…</p>
                     </div>
                     <div class="card-footer outline-dark">
                         <span class="badge bg-light text-dark syntax-badge">@paste.Syntax</span>

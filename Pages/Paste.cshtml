@@ -3,11 +3,12 @@
 @{
     ViewData["Title"] = Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID;
     ViewData["IncludeHighlight"] = true;
-    var isLoggedIn = HttpContext.Request.RouteValues["LoggedIn"] != null && (bool) (HttpContext.Request.RouteValues["LoggedIn"] ?? false);
+    var isLoggedIn = HttpContext.Items.TryGetValue("logged_user", out var tUser);
+    var user = (DevBin.User) tUser;
 
     string pasteTitle = Model.Paste.Title.Length > 0 ? Model.Paste.Title : Model.Paste.ID;
     if (pasteTitle.Length >= 48) {
-        pasteTitle = pasteTitle.Substring(0, Math.Min(pasteTitle.Length, 48)) + "…";
+        pasteTitle = pasteTitle[..Math.Min(pasteTitle.Length, 48)] + "…";
     }
 }
 
@@ -33,17 +34,15 @@
     <div class="col-3 col-sm-4">
         <div class="row">
             <div class="col-6">
-
                 <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-sm btn-outline-light"><i class="fas fa-code"></i> Raw Paste</a>
-                @if (isLoggedIn) {
+                @if (isLoggedIn && Model.Paste.AuthorID == user.ID) {
                     <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-light mt-2"><i class="fas fa-edit"></i> Edit Paste</a>
                 }
             </div>
             <div class="col-6">
-
                 <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-light"><i class="fas fa-plus"></i> Clone Paste</a>
-                @if (isLoggedIn) {
-                    <a href="/delete/@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-danger disabled mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+                @if (isLoggedIn && Model.Paste.AuthorID == user.ID) {
+                    <a href="/?delete=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-danger mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
                 }
             </div>
         </div>

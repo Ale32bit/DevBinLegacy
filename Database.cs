@@ -120,7 +120,10 @@ ENGINE=InnoDB;";
                 cmd = new MySqlCommand(@"SELECT username FROM `users` WHERE userId = @userId;", conn);
                 cmd.Parameters.AddWithValue("@userId", authorId);
                 using var reader = cmd.ExecuteReader();
-                if (reader.Read()) paste.Author = reader.GetString("username");
+                if (reader.Read()) {
+                    paste.Author = reader.GetString("username");
+                    paste.AuthorID = authorId;
+                }
             }
 
             conn.Close();
@@ -128,7 +131,7 @@ ENGINE=InnoDB;";
             return paste;
         }
 
-        public Paste? FetchPaste(string id, bool updateViews = false) {
+        public Paste? FetchPaste(string? id, bool updateViews = false) {
             MySqlConnection conn = GetConnection();
             return FetchPaste(id, conn, updateViews);
         }
@@ -162,7 +165,11 @@ ENGINE=InnoDB;";
                         var ucmd = new MySqlCommand(@"SELECT username FROM `users` WHERE userId = @userId;", uconn);
                         ucmd.Parameters.AddWithValue("@userId", authorId);
                         using var ureader = ucmd.ExecuteReader();
-                        if (ureader.Read()) paste.Author = ureader.GetString("username");
+                        if (ureader.Read()) {
+                            paste.Author = ureader.GetString("username");
+                            paste.AuthorID = authorId;
+                        }
+
                         uconn.Close();
                     }
 
@@ -192,8 +199,8 @@ ENGINE=InnoDB;";
         public string Upload(Paste paste, User? author = null) {
             string id;
 
-            paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
-            paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
+            paste.Title = paste.Title[..Math.Min(255, paste.Title.Length)];
+            paste.Syntax = paste.Syntax[..Math.Min(255, paste.Syntax.Length)];
 
             using MySqlConnection conn = GetConnection();
             conn.Open();
@@ -222,14 +229,14 @@ ENGINE=InnoDB;";
         }
 
         public bool Update(Paste paste, MySqlConnection conn) {
-            paste.Title = paste.Title.Substring(0, Math.Min(255, paste.Title.Length));
-            paste.Syntax = paste.Syntax.Substring(0, Math.Min(255, paste.Syntax.Length));
+            paste.Title = paste.Title[..Math.Min(255, paste.Title.Length)];
+            paste.Syntax = paste.Syntax[..Math.Min(255, paste.Syntax.Length)];
 
             if (conn.State != ConnectionState.Open) conn.Open();
 
             MySqlCommand cmd = new(@"UPDATE pastes
                                     SET title = @title, syntax = @syntax, exposure = @exposure, contentCache = @contentCache
-                                    WHERE id = @id;");
+                                    WHERE id = @id;", conn);
 
             cmd.Parameters.AddWithValue("@id", paste.ID);
             cmd.Parameters.AddWithValue("@title", paste.Title);
@@ -248,7 +255,7 @@ ENGINE=InnoDB;";
         public bool Delete(Paste paste, MySqlConnection conn) {
             if (conn.State != ConnectionState.Open) conn.Open();
 
-            MySqlCommand cmd = new(@"DELETE FROM pastes WHERE id = @id;");
+            MySqlCommand cmd = new(@"DELETE FROM pastes WHERE id = @id;", conn);
 
             cmd.Parameters.AddWithValue("@id", paste.ID);
 
@@ -405,6 +412,7 @@ ENGINE=InnoDB;";
                         Views = reader.GetUInt32("views"),
                         ContentCache = reader.GetString("contentCache") ?? "",
                         Author = user.Username,
+                        AuthorID = user.ID,
                     };
                     pastes.Add(paste);
                 }
