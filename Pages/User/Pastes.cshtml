@@ -17,9 +17,9 @@
 }
 
 <div class="row mx-lg-5">
-    <h2>Your Pastes</h2>
+    <h3>Your Pastes</h3>
     @if (pastes.Length == 0) {
-        <h2 class="text-muted fst-italic text-center">*crickets*</h2>
+        <h2 class="text-muted fst-italic text-center position-absolute top-50 start-50 translate-middle">Looks empty</h2>
     }
     @foreach (Paste paste in pastes) {
         //<a href="/@paste.ID">@(paste.Title ?? paste.ID)</a>

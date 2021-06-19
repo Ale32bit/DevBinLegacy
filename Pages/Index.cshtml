@@ -3,7 +3,8 @@
 @{
     if (Model.IsCloning) {
         ViewData["Title"] = "Cloning " + Model.ContextPaste.ID;
-    } else if (Model.IsEditing) {
+    }
+    else if (Model.IsEditing) {
         ViewData["Title"] = "Editing " + (string.IsNullOrEmpty(Model.ContextPaste.Title) ? Model.ContextPaste.Title : Model.ContextPaste.ID);
     }
     ViewData["IncludeHighlight"] = true;
@@ -29,7 +30,7 @@
                     <label for="paste-syntax" class="form-label">Paste Syntax</label>
                     <select id="paste-syntax" name="paste-syntax" class="form-select bg-dark text-light">
                         @{
-                            if (Model.IsCloning) {
+                            if (Model.IsCloning || Model.IsEditing) {
                                 <option value="@Model.ContextPaste.Syntax" selected>@Model.ContextPaste.Syntax</option>
                             }
                             else {
@@ -44,10 +45,29 @@
                 <div class="col-6">
                     <label for="paste-exposure" class="form-label">Paste Exposure</label>
                     <select id="paste-exposure" name="paste-exposure" class="form-select bg-dark text-light">
-                        <option value="0">Public</option>
-                        <option value="1">Unlisted</option>
+                        <!-- Paste Exposures, didn't let me do inline C# so i had to clone -->
+                        @if (Model.ContextPaste?.Exposure == Paste.Exposures.Public) {
+                            <option value="0" selected>Public</option>
+                        }
+                        else {
+                            <option value="0">Public</option>
+                        }
+
+                        @if (Model.ContextPaste?.Exposure == Paste.Exposures.Unlisted) {
+                            <option value="1" selected>Unlisted</option>
+                        }
+                        else {
+                            <option value="1">Unlisted</option>
+                        }
+
+
                         @if (isLoggedIn) {
-                            <option value="2">Private</option>
+                            @if (Model.ContextPaste?.Exposure == Paste.Exposures.Private) {
+                                <option value="2" selected>Private</option>
+                            }
+                            else {
+                                <option value="2">Private</option>
+                            }
                         }
                         @if (!Model.IsEditing) {
                             <option value="3" id="encrypt-option">Encrypted</option>
@@ -64,7 +84,7 @@
             <div class="row pt-2">
                 <div class="col-6">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="paste-as-guest" id="paste-as-guest" @(Model.IsEditing ? "disabled" : "" ) @(isLoggedIn ? "" : "disabled checked")>
+                        <input class="form-check-input" type="checkbox" name="paste-as-guest" id="paste-as-guest" @(Model.IsEditing ? "disabled" : "") @(isLoggedIn ? "" : "disabled checked")>
                         <label class="form-check-label" for="paste-as-guest">
                             Create as guest
                         </label>

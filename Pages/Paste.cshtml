@@ -35,14 +35,14 @@
         <div class="row">
             <div class="col-6">
                 <a href="/raw/@Model.Paste.ID" role="button" class="form-control btn btn-sm btn-outline-light"><i class="fas fa-code"></i> Raw Paste</a>
-                @if (isLoggedIn && Model.Paste.AuthorID == user.ID) {
+                @if (isLoggedIn && Model.Paste.AuthorID == user.ID && Model.Paste.Exposure != Paste.Exposures.Encrypted) {
                     <a href="/?edit=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-light mt-2"><i class="fas fa-edit"></i> Edit Paste</a>
                 }
             </div>
             <div class="col-6">
                 <a href="/?clone=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-light"><i class="fas fa-plus"></i> Clone Paste</a>
                 @if (isLoggedIn && Model.Paste.AuthorID == user.ID) {
-                    <a href="/?delete=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-danger mt-2"><i class="fas fa-trash-alt"></i> Delete Paste</a>
+                    <a href="/?delete=@Model.Paste.ID" role="button" type="submit" class="form-control btn btn-sm btn-outline-danger mt-2" onclick="return confirm('Are you sure you want to delete this paste?')"><i class="fas fa-trash-alt"></i> Delete Paste</a>
                 }
             </div>
         </div>

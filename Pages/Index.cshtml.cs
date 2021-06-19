@@ -102,6 +102,7 @@ namespace DevBin.Pages {
                 }
 
                 id = ContextPaste.ID;
+                paste.ID = id;
                 Database.Instance.Update(paste);
             }
             else {

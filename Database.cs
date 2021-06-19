@@ -7,7 +7,7 @@ namespace DevBin {
     public class Database {
         public static Database Instance;
 
-        public const string CreateSQL =
+        public const string SqlCreateScript =
             @"CREATE TABLE IF NOT EXISTS `users` (
   `userId` int(11) NOT NULL AUTO_INCREMENT,
   `username` varchar(64) NOT NULL,
@@ -51,7 +51,7 @@ ENGINE=InnoDB;";
             // Create tables if not exist
             var conn = GetConnection();
             conn.Open();
-            MySqlCommand cmd = new(CreateSQL, conn);
+            MySqlCommand cmd = new(SqlCreateScript, conn);
             cmd.ExecuteNonQuery();
             conn.Close();
 
@@ -131,7 +131,7 @@ ENGINE=InnoDB;";
             return paste;
         }
 
-        public Paste? FetchPaste(string? id, bool updateViews = false) {
+        public Paste? FetchPaste(string id, bool updateViews = false) {
             MySqlConnection conn = GetConnection();
             return FetchPaste(id, conn, updateViews);
         }
@@ -399,7 +399,7 @@ ENGINE=InnoDB;";
             conn.Open();
 
             MySqlCommand cmd =
-                new(@"SELECT * FROM `pastes` WHERE authorId = @userId;", conn);
+                new(@"SELECT * FROM `pastes` WHERE authorId = @userId ORDER BY timestamp;", conn);
             cmd.Parameters.AddWithValue("@userId", user.ID);
             using (var reader = cmd.ExecuteReader()) {
                 while (reader.Read()) {
