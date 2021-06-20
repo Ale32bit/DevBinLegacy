@@ -3,9 +3,9 @@ using System;
 
 namespace DevBin {
     public class UserPaste {
-        public string Title { get; set; }
-        public string Syntax { get; set; }
-        public Paste.Exposures Exposure { get; set; }
+        public string? Title { get; set; }
+        public string? Syntax { get; set; }
+        public Paste.Exposures? Exposure { get; set; }
         public string Content { get; set; }
         public bool AsGuest { get; set; }
     }
@@ -26,7 +26,7 @@ namespace DevBin {
         public int? AuthorID { get; set; }
         public DateTime Date { get; set; }
         public uint Views { get; set; }
-        public string ContentCache { get; set; }
+        public string? ContentCache { get; set; }
 
         public static string TimeAgo(DateTime date) {
             const int SECOND = 1;

@@ -121,8 +121,7 @@ namespace DevBin {
             else {
                 app.UseExceptionHandler("/Error");
             }
-
-
+            
             app.Use((context, next) => {
                 // Create a session identifier based on the user agent, ip address and current day
                 var sessionIdByte =

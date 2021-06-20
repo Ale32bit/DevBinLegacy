@@ -33,15 +33,28 @@ CREATE TABLE IF NOT EXISTS `pastes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `session_tokens` (
-	`token` VARCHAR(256) NOT NULL COLLATE 'utf8_general_ci',
+	`token` VARCHAR(256) NOT NULL COLLATE 'utf8mb4_general_ci',
 	`userId` INT(11) NOT NULL DEFAULT '0',
 	`timestamp` TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
 	PRIMARY KEY (`token`) USING BTREE,
 	INDEX `UserID` (`userId`) USING BTREE,
-	CONSTRAINT `UserID` FOREIGN KEY (`userId`) REFERENCES `devbin`.`users` (`userId`) ON UPDATE NO ACTION ON DELETE CASCADE
+	CONSTRAINT `UserID` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON UPDATE NO ACTION ON DELETE CASCADE
 )
 COLLATE='utf8_general_ci'
-ENGINE=InnoDB;";
+ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS `api_tokens` (
+	`userId` INT(11) NULL DEFAULT NULL,
+	`token` VARCHAR(256) NOT NULL COLLATE 'utf8mb4_general_ci',
+	PRIMARY KEY (`token`) USING BTREE,
+	INDEX `user` (`userId`) USING BTREE,
+	CONSTRAINT `user` FOREIGN KEY (`userId`) REFERENCES `users` (`userId`) ON UPDATE NO ACTION ON DELETE CASCADE 
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+;
+
+";
 
         public string ConnectionString { get; set; }
 
@@ -49,11 +62,10 @@ ENGINE=InnoDB;";
             ConnectionString = connectionString;
 
             // Create tables if not exist
-            var conn = GetConnection();
+            using var conn = GetConnection();
             conn.Open();
             MySqlCommand cmd = new(SqlCreateScript, conn);
             cmd.ExecuteNonQuery();
-            conn.Close();
 
             TryCreateEvent();
 
@@ -76,7 +88,7 @@ ENGINE=InnoDB;";
 
             conn.Open();
 
-            MySqlCommand cmd = new(sql, conn);
+            using MySqlCommand cmd = new(sql, conn);
             try {
                 cmd.ExecuteNonQuery();
             }
@@ -132,13 +144,13 @@ ENGINE=InnoDB;";
         }
 
         public Paste? FetchPaste(string id, bool updateViews = false) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             return FetchPaste(id, conn, updateViews);
         }
 
         public Paste[] GetLatest(int n = 30) {
             List<Paste> pastes = new();
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
 
             conn.Open();
 
@@ -160,7 +172,7 @@ ENGINE=InnoDB;";
 
                     if (!reader.IsDBNull(reader.GetOrdinal("authorId"))) authorId = reader.GetInt32("authorId");
                     if (authorId != null) {
-                        var uconn = GetConnection();
+                        using var uconn = GetConnection();
                         uconn.Open();
                         var ucmd = new MySqlCommand(@"SELECT username FROM `users` WHERE userId = @userId;", uconn);
                         ucmd.Parameters.AddWithValue("@userId", authorId);
@@ -170,14 +182,12 @@ ENGINE=InnoDB;";
                             paste.AuthorID = authorId;
                         }
 
-                        uconn.Close();
                     }
 
                     pastes.Add(paste);
                 }
             }
 
-            conn.Close();
             return pastes.ToArray();
         }
 
@@ -191,7 +201,7 @@ ENGINE=InnoDB;";
         }
 
         public bool Exists(string id) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             return Exists(id, conn);
         }
 
@@ -248,7 +258,7 @@ ENGINE=InnoDB;";
         }
 
         public bool Update(Paste paste) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             return Update(paste, conn);
         }
 
@@ -263,7 +273,7 @@ ENGINE=InnoDB;";
         }
 
         public bool Delete(Paste paste) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             return Delete(paste, conn);
         }
 
@@ -275,7 +285,7 @@ ENGINE=InnoDB;";
         }
 
         public User? FetchUser(string loginDetail) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             conn.Open();
 
             MySqlCommand cmd = new(@"SELECT * FROM users WHERE username = @loginDetail OR email = @loginDetail;", conn);
@@ -297,7 +307,7 @@ ENGINE=InnoDB;";
         }
 
         public User? FetchUser(int id) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             conn.Open();
 
             MySqlCommand cmd = new(@"SELECT * FROM users WHERE userId = @userId;", conn);
@@ -319,7 +329,7 @@ ENGINE=InnoDB;";
         }
 
         public User? CreateUser(User user, string password) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             conn.Open();
 
             MySqlCommand cmd =
@@ -329,11 +339,14 @@ ENGINE=InnoDB;";
             cmd.Parameters.AddWithValue("@email", user.Email);
             cmd.Parameters.AddWithValue("@password", password);
 
-            return cmd.ExecuteNonQuery() > 1 ? FetchUser(user.Email) : null;
+            
+            var newUser = cmd.ExecuteNonQuery() > 1 ? FetchUser(user.Email) : null;
+
+            return newUser;
         }
 
         public void InsertSessionToken(int userId, string token) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             conn.Open();
 
             MySqlCommand cmd = new(@"INSERT INTO session_tokens (token, userId) VALUES (@token, @userId)", conn);
@@ -341,22 +354,20 @@ ENGINE=InnoDB;";
             cmd.Parameters.AddWithValue("@userId", userId);
 
             cmd.ExecuteNonQuery();
-            conn.Close();
         }
 
         public void InvalidateSessionToken(string token) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             conn.Open();
 
             MySqlCommand cmd = new(@"DELETE FROM session_tokens WHERE token = @token;", conn);
             cmd.Parameters.AddWithValue("@token", token);
 
             cmd.ExecuteNonQuery();
-            conn.Close();
         }
 
         public User? ResolveSessionToken(string token, bool update = true) {
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
             conn.Open();
 
             // The UPDATE part is just to trigger the timestamp update in the SQL server
@@ -365,36 +376,20 @@ ENGINE=InnoDB;";
             cmd.Parameters.AddWithValue("@token", token);
 
             using var reader = cmd.ExecuteReader();
+
+            User? user = null;
+            
             if (reader.Read()) {
                 var userId = reader.GetInt32("userId");
-                conn.Close();
-                return FetchUser(userId);
+                user = FetchUser(userId);
             }
 
-            conn.Close();
-
-            return null;
-        }
-
-        private static string RandomId() {
-            string code = "";
-
-            string alpha = "abcdefghijklmnopqrstuvwxyz";
-
-            Random random = new();
-
-            for (var i = 0; i < 8; i++) {
-                string ch = alpha[random.Next(0, alpha.Length)].ToString();
-                if (random.Next(0, 2) > 0) ch = ch.ToUpper();
-                code += ch;
-            }
-
-            return code;
+            return user;
         }
 
         public Paste[] GetUserPastes(User user) {
             List<Paste> pastes = new();
-            MySqlConnection conn = GetConnection();
+            using MySqlConnection conn = GetConnection();
 
             conn.Open();
 
@@ -418,8 +413,143 @@ ENGINE=InnoDB;";
                 }
             }
 
-            conn.Close();
             return pastes.ToArray();
+        }
+
+        public bool UpdateUserEmail(User user, string newEmail) {
+            using MySqlConnection conn = GetConnection();
+
+            conn.Open();
+
+            MySqlCommand cmd =
+                new(@"UPDATE users SET email = @email WHERE userId = @userId;", conn);
+            cmd.Parameters.AddWithValue("@email", newEmail);
+            cmd.Parameters.AddWithValue("@userId", user.ID);
+
+
+            var changed = cmd.ExecuteNonQuery() == 1;
+
+
+            return changed;
+        }
+
+        public bool UpdateUserPassword(User user, string newPassword) {
+            using MySqlConnection conn = GetConnection();
+
+            conn.Open();
+
+            MySqlCommand cmd =
+                new(@"UPDATE users SET password = @password WHERE userId = @userId;", conn);
+            cmd.Parameters.AddWithValue("@password", newPassword);
+            cmd.Parameters.AddWithValue("@userId", user.ID);
+
+
+            var changed = cmd.ExecuteNonQuery() == 1;
+
+            return changed;
+        }
+
+        public bool DeleteUser(User user) {
+            using MySqlConnection conn = GetConnection();
+
+            conn.Open();
+
+            MySqlCommand cmd =
+                new(@"DELETE FROM users WHERE userId = @userId;", conn);
+            cmd.Parameters.AddWithValue("@userId", user.ID);
+
+            var changed = cmd.ExecuteNonQuery() != 0;
+
+            return changed;
+        }
+
+        public User? ResolveApiToken(string token) {
+            using MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd =
+                new(@"SELECT * FROM api_tokens WHERE token = @token;", conn);
+            cmd.Parameters.AddWithValue("@token", token);
+
+            using var reader = cmd.ExecuteReader();
+
+            User? user = null;
+            if (reader.Read()) {
+                user = FetchUser(reader.GetInt32("userId"));
+            }
+
+            conn.Close();
+
+            return user;
+        }
+
+        public string? GetUserApiToken(User user) {
+            using MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd =
+                new(@"SELECT * FROM api_tokens WHERE userId = @userId;", conn);
+            cmd.Parameters.AddWithValue("@userId", user.ID);
+
+            using var reader = cmd.ExecuteReader();
+
+            string? token = null;
+            if (reader.Read()) {
+                token = reader.GetString("token");
+            }
+
+            return token;
+        }
+
+        public string GenerateToken(User user) {
+            string token;
+            do {
+                token = Utils.RandomString(64);
+            } while (ResolveApiToken(token) != null);
+
+            var tokenExists = GetUserApiToken(user) != null;
+
+            using MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd = tokenExists
+                ? new MySqlCommand(@"UPDATE api_tokens SET token = @token WHERE userId = @userId;", conn)
+                : new MySqlCommand(@"INSERT INTO api_tokens (userId, token) VALUES (@userId, @token);", conn);
+
+            cmd.Parameters.AddWithValue("@userId", user.ID);
+            cmd.Parameters.AddWithValue("@token", token);
+
+            cmd.ExecuteNonQuery();
+
+            return token;
+        }
+
+        public bool DeleteToken(User user) {
+            using MySqlConnection conn = GetConnection();
+            conn.Open();
+
+            MySqlCommand cmd = new(@"DELETE FROM api_tokens WHERE userId = @userId;", conn);
+            cmd.Parameters.AddWithValue("@userId", user.ID);
+
+            var changed = cmd.ExecuteNonQuery() == 1;
+
+            return changed;
+        }
+        
+        private static string RandomId() {
+            string code = "";
+
+            string alpha = "abcdefghijklmnopqrstuvwxyz";
+
+            Random random = new();
+
+            for (var i = 0; i < 8; i++) {
+                string ch = alpha[random.Next(0, alpha.Length)].ToString();
+                if (random.Next(0, 2) > 0) ch = ch.ToUpper();
+                code += ch;
+            }
+
+            return code;
         }
     }
 }

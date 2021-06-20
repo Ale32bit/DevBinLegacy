@@ -137,14 +137,14 @@ function validateLogin(form) {
         .then(data => {
             if (data.ok){
                 errorLabel.innerText = "";
-                document.location = "/user/redirect?token=" + encodeURI(data.message);
+                document.location = "/user/redirect?token=" + encodeURI(data.token);
             } else {
                 errorLabel.innerText = data.message;
             }
         })
 }
 
-async function validateSignup(form) {
+function validateSignup(form) {
     let emailField = document.getElementById("email-field");
     let usernameField = document.getElementById("username-field");
     let passwordField = document.getElementById("password-field");
@@ -172,7 +172,7 @@ async function validateSignup(form) {
                 if (data.ok){
                     errorLabel.innerText = "";
                     
-                    document.location = "/user/redirect?token=" + encodeURI(data.message);
+                    document.location = "/user/redirect?token=" + encodeURI(data.token);
                 } else {
                     errorLabel.innerText = data.message;
                 }

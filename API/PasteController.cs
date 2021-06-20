@@ -2,9 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 
 namespace DevBin.API {
     /// <summary>
@@ -25,10 +27,10 @@ namespace DevBin.API {
         [ProducesResponseType(typeof(Response), (int) HttpStatusCode.NotFound)]
         [Produces("application/json")]
         public ActionResult Index(string id) {
-            Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
-            Paste paste = database.FetchPaste(id);
-
-
+            Console.WriteLine(Request.Headers);
+            
+            var paste = Database.Instance.FetchPaste(id);
+            
             if (paste != null) return Ok(paste);
 
             return NotFound(new Response(404, "Paste not found", false));
@@ -38,6 +40,7 @@ namespace DevBin.API {
         /// Upload a paste
         /// </summary>
         /// <param name="userPaste">Paste data</param>
+        /// <param name="token">API Token</param>
         /// <returns></returns>
         [Route("/api/v2/create")]
         [HttpPost]
@@ -46,32 +49,33 @@ namespace DevBin.API {
         [ProducesResponseType(typeof(Response), (int) HttpStatusCode.Unauthorized)]
         [Produces("application/json")]
         [Consumes("application/json")]
-        public ActionResult Create([FromBody] UserPaste userPaste) {
+        public ActionResult Create([FromBody] UserPaste userPaste, [FromQuery][Required] string token) {
+            var tokenOwner = Database.Instance.ResolveApiToken(token);
+            if (tokenOwner == null) {
+                return Unauthorized(new Response(401, "Invalid token", false));
+            }
+            
             if (!ModelState.IsValid) return BadRequest(new Response(400, "Invalid JSON data", false));
-
-
-            if (userPaste.Content == null || userPaste.Title == null)
+            
+            if (string.IsNullOrEmpty(userPaste.Content) ||  string.IsNullOrEmpty(userPaste.Title))
                 return BadRequest(new Response(400, "Missing fields", false));
 
             if (userPaste.AsGuest)
-                if (userPaste.Exposure == Paste.Exposures.Private || userPaste.Exposure == Paste.Exposures.Encrypted)
+                if (userPaste.Exposure is Paste.Exposures.Private or Paste.Exposures.Encrypted)
                     userPaste.Exposure = Paste.Exposures.Unlisted;
-
-            Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
-            PasteFs pasteFs = HttpContext.RequestServices.GetService(typeof(PasteFs)) as PasteFs;
 
             Paste paste = new() {
                 Title = userPaste.Title,
-                Exposure = userPaste.Exposure,
+                Exposure = userPaste.Exposure ?? Paste.Exposures.Public,
                 Syntax = userPaste.Syntax ?? "plaintext",
-                ContentCache = userPaste.Content.Substring(0, Math.Min(userPaste.Content.Length, 64))
+                ContentCache = userPaste.Content[..Math.Min(userPaste.Content.Length, 64)],
+                Author = tokenOwner.Username,
+                AuthorID = tokenOwner.ID,
             };
 
-            string id = database.Upload(paste);
-
-            pasteFs.Write(id, userPaste.Content);
-
-            Paste cPaste = database.FetchPaste(id);
+            string id = Database.Instance.Upload(paste);
+            PasteFs.Instance.Write(id, userPaste.Content);
+            var cPaste = Database.Instance.FetchPaste(id);
 
             return Ok(cPaste);
         }
@@ -81,6 +85,7 @@ namespace DevBin.API {
         /// </summary>
         /// <param name="id">Paste ID</param>
         /// <param name="userPaste">New paste data</param>
+        /// <param name="token">API Token</param>
         /// <returns>Updated paste</returns>
         [Route("/api/v2/update/{id}")]
         [HttpPost]
@@ -89,22 +94,64 @@ namespace DevBin.API {
         [ProducesResponseType(typeof(Response), (int) HttpStatusCode.Unauthorized)]
         [Produces("application/json")]
         [Consumes("application/json")]
-        public ActionResult Update(string id, [FromBody] UserPaste userPaste) {
-            return NotFound();
+        public ActionResult Update(string id, [FromBody] UserPaste userPaste, [FromQuery][Required] string token) {
+            var tokenOwner = Database.Instance.ResolveApiToken(token);
+            if (tokenOwner == null) {
+                return Unauthorized(new Response(401, "Invalid token", false));
+            }
+            
+            var paste = Database.Instance.FetchPaste(id);
+            if (paste == null) {
+                return NotFound(new Response(404, "Paste not found", false));
+            }
+
+            if (paste.AuthorID != tokenOwner.ID) {
+                return Unauthorized(new Response(401, "Not your paste", false));
+            }
+
+            paste.Exposure = userPaste.Exposure ?? paste.Exposure;
+            paste.Syntax = userPaste.Syntax ?? paste.Syntax;
+            paste.Title = userPaste.Title ?? paste.Title;
+            paste.ContentCache = userPaste.Content?[..Math.Min(64, userPaste.Content.Length)] ?? paste.ContentCache;
+
+            Database.Instance.Update(paste);
+            if (userPaste.Content != null) {
+                PasteFs.Instance.Write(paste.ID, userPaste.Content);
+            }
+
+            return Ok(new Response(200, paste.ID, true));
         }
 
         /// <summary>
         /// Delete a paste of yours
         /// </summary>
         /// <param name="id">Paste ID</param>
+        /// <param name="token">API Token</param>
         /// <returns>The old paste information</returns>
         [Route("/api/v2/delete/{id}")]
         [HttpGet]
         [ProducesResponseType(typeof(Paste), (int) HttpStatusCode.OK)]
         [ProducesResponseType(typeof(Response), (int) HttpStatusCode.Unauthorized)]
         [Produces("application/json")]
-        public ActionResult Delete(string id) {
-            return NotFound();
+        public ActionResult Delete(string id, [FromQuery][Required] string token) {
+            var tokenOwner = Database.Instance.ResolveApiToken(token);
+            if (tokenOwner == null) {
+                return Unauthorized(new Response(401, "Invalid token", false));
+            }
+            
+            var paste = Database.Instance.FetchPaste(id);
+            if (paste == null) {
+                return NotFound(new Response(404, "Paste not found", false));
+            }
+
+            if (paste.AuthorID != tokenOwner.ID) {
+                return Unauthorized(new Response(401, "Not your paste", false));
+            }
+
+            Database.Instance.Delete(paste);
+            PasteFs.Instance.Delete(paste.ID);
+
+            return Ok(new Response(200, paste.ID, true));
         }
 
         /// <summary>
@@ -118,8 +165,7 @@ namespace DevBin.API {
         [Produces("application/json")]
         public ActionResult Latest(int amount = 30) {
             amount = Math.Min(amount, 50);
-            Database database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
-            return Ok(database.GetLatest(amount));
+            return Ok(Database.Instance.GetLatest(amount));
         }
     }
 }

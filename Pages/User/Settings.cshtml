@@ -2,63 +2,84 @@
 @model DevBin.Pages.User.SettingsModel
 @{
     ViewData["Title"] = "Settings";
+
+    if (!HttpContext.Items.TryGetValue("logged_user", out var tUser)) {
+        Response.Redirect("/");
+        return;
+    }
+    User user = (User) tUser!;
+
 }
 
 <div class="my-4 row">
     <div class="offset-md-1 col-md-4">
         <div class="mt-3">
-            <form>
+            <form onsubmit="event.preventDefault(); changeEmail(this);">
                 <h5>Update Email Address</h5>
                 <div class="mb-3">
-                    <label for="email" class="form-label">New Email Address</label>
+                    <label for="email" class="form-label">Your Email Address</label>
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="far fa-envelope"></i>
                         </span>
-                        <input type="email" class="form-control bg-dark text-light" id="email">
+                        <input type="email" name="email" class="form-control bg-dark text-light" id="email" value="@user.Email">
+                        <div class="invalid-feedback" id="invalid-email"></div>
+                        <div class="valid-feedback" id="valid-email"></div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-outline-light">Update</button>
+                <button type="submit" class="btn btn-outline-light" id="email-button">Update Email Address</button>
             </form>
         </div>
         <div class="mt-3">
-            <form>
+            <form onsubmit="event.preventDefault(); changePassword(this);">
                 <h5>Update Password</h5>
                 <div class="mb-3">
-                    <label for="old-password" class="form-label">Old Password</label>
+                    <label for="old-password" class="form-label">Your Current Password</label>
 
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="fas fa-key"></i>
                         </span>
-                        <input type="password" class="form-control bg-dark text-light" id="old-password">
+                        <input type="password" name="old-password" class="form-control bg-dark text-light" id="old-password">
                         <button class="input-group-text bg-dark text-light" type="button" onmousedown="showPassword('old-password');" onmouseup="hidePassword('old-password');" onmouseleave="hidePassword('old-password');">
                             <i class="fas fa-eye"></i>
                         </button>
+                        <div class="invalid-feedback">
+                            Wrong password
+                        </div>
                     </div>
+
                 </div>
                 <div class="mb-3">
-                    <label for="new-password" class="form-label">New Password</label>
+                    <label for="new-password" class="form-label">Your New Password</label>
                     <div class="input-group">
                         <span class="input-group-text">
                             <i class="fas fa-key"></i>
                         </span>
-                        <input type="password" class="form-control bg-dark text-light" id="new-password">
+                        <input type="password" name="new-password" class="form-control bg-dark text-light" id="new-password">
                         <button class="input-group-text bg-dark text-light" type="button" onmousedown="showPassword('new-password');" onmouseup="hidePassword('new-password');" onmouseleave="hidePassword('new-password');">
                             <i class="fas fa-eye"></i>
                         </button>
+                        <div class="invalid-feedback">
+                            Invalid password
+                        </div>
+                        <div class="valid-feedback">
+                            Password changed
+                        </div>
                     </div>
+                    <div class="form-text text-light">Should contain at least 8 characters</div>
+
                 </div>
 
-                <button type="submit" class="btn btn-outline-light">Update</button>
+                <button type="submit" class="btn btn-outline-light">Update Password</button>
             </form>
         </div>
     </div>
 
     <div class="col-md-4 offset-md-2">
         <div class="mt-3">
-            <form>
+            <form onsubmit="event.preventDefault();">
                 <h5>Developer API Key</h5>
                 <div class="mb-3">
                     <label for="api-key" class="form-label">API Key</label>
@@ -66,17 +87,20 @@
                         <span class="input-group-text">
                             <i class="fas fa-code"></i>
                         </span>
-                        <input type="password" class="form-control bg-dark text-light" id="api-key" style="user-select: all" readonly>
+                        <input type="text" class="form-control bg-dark text-light" id="api-key" style="user-select: all" readonly>
+                        <button class="input-group-text bg-dark text-light" type="button" onclick="copyToClipboard('api-key');">
+                            <i class="fas fa-clipboard"></i>
+                        </button>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-outline-light">Generate Key</button>
-                <button type="submit" class="btn btn-danger">Delete Key</button>
+                <button type="submit" class="btn btn-outline-light" onclick="return generateToken();">Generate Key</button>
+                <button type="submit" class="btn btn-danger" onclick="return deleteToken();">Delete Key</button>
             </form>
         </div>
 
         <div class="mt-3">
-            <form>
+            <form onsubmit="event.preventDefault(); deleteAccount(this);">
                 <h5>Danger Zone</h5>
                 <h6>Delete your account</h6>
                 <div class="mb-3">
@@ -85,10 +109,13 @@
                         <span class="input-group-text">
                             <i class="fas fa-key"></i>
                         </span>
-                        <input type="password" class="form-control bg-dark text-light" id="deletion-password">
+                        <input type="password" name="deletion-password" class="form-control bg-dark text-light" id="deletion-password">
                         <button class="input-group-text bg-dark text-light" type="button" onmousedown="showPassword('deletion-password');" onmouseup="hidePassword('deletion-password');" onmouseleave="hidePassword('deletion-password');">
                             <i class="fas fa-eye"></i>
                         </button>
+                    </div>
+                    <div class="invalid-feedback">
+                        Wrong password
                     </div>
                     <div class="form-text text-light">Deleting your account will permanently delete all pastes belonging to you. This action is irreversible.</div>
                 </div>
@@ -108,4 +135,148 @@
         let passwordField = document.getElementById(id);
         passwordField.type = "password";
         }
+</script>
+
+<script>
+
+function validateEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@@"]+(\.[^<>()\[\]\\.,;:\s@@"]+)*)|(".+"))@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
+function switchValidation(el, valid, doValid = true) {
+    if(valid) {
+        el.classList.remove("is-invalid");
+        if (doValid)
+            el.classList.add("is-valid");
+    } else {
+        if (doValid)
+            el.classList.remove("is-valid");
+        el.classList.add("is-invalid");
+    }
+}
+
+function setValidation(elParent, valid, message, t, f) {
+    switchValidation(elParent, valid, true);
+    if (valid) {
+        t.innerText = message;
+    } else {
+        f.innerText = message;
+    }
+}
+
+function changeEmail(form) {
+    let emailField = document.getElementById("email");
+    let t = document.getElementById("valid-email");
+    let f = document.getElementById("invalid-email");
+    
+    switchValidation(emailField, validateEmail(emailField.value), false);
+    
+    const data = new URLSearchParams(new FormData(form));
+      
+    fetch("/user/settings", {
+        method: "POST",
+        body: data, 
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok){
+            setValidation(emailField, true, "Email changed", t,  f);
+        } else {
+            setValidation(emailField, false, data.message, t,  f);
+        }
+    })
+}
+
+function changePassword(form) {
+    let oldPassword = document.getElementById("old-password");
+    let newPassword = document.getElementById("new-password");
+    
+    let valid = newPassword.value.length >= 8;
+    
+    switchValidation(newPassword, valid, false);
+    if (!valid) return
+    
+    const data = new URLSearchParams(new FormData(form));
+      
+    fetch("/user/settings", {
+        method: "POST",
+        body: data, 
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        if (data.ok){
+            switchValidation(newPassword, true, true);
+        } else {
+            switchValidation(oldPassword, false, true);
+        }
+    })
+}
+
+function deleteAccount(form) {
+    let password = document.getElementById("deletion-password");
+    
+    if (!confirm("Are you really sure you want to delete your account?\nThis operation is irreversible!")) return;
+   
+    const data = new URLSearchParams(new FormData(form));
+    
+    fetch("/user/settings", {
+        method: "POST",
+        body: data, 
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            document.location = "/";
+            switchValidation(password, true, true);
+        } else {
+            switchValidation(password, false, true);
+        }
+    });
+}
+
+function generateToken() {
+    let field = document.getElementById("api-key");
+    fetch("/user/apitoken?generate", {
+        method: "POST",
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            field.value = data.token;
+        }
+    });
+}
+
+function deleteToken() {
+    let field = document.getElementById("api-key");
+    fetch("/user/apitoken?delete", {
+        method: "POST",
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            field.value = "";
+        }
+    });
+}
+
+function copyToClipboard(el) {
+    let field = document.getElementById(el);
+    field.focus();
+    field.select();
+    document.execCommand("copy");
+}
+
+let field = document.getElementById("api-key");
+fetch("/user/apitoken?fetch", {
+        method: "POST",
+})
+.then(response => response.json())
+.then(data => {
+    if (data.ok) {
+        field.value = data.token;
+    }   
+});
 </script>

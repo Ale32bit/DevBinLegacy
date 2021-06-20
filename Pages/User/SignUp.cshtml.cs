@@ -10,6 +10,10 @@ namespace DevBin.Pages.User {
         }
 
         public ActionResult OnPost() {
+            if (!Request.HasFormContentType) {
+                return BadRequest("Invalid Content-Type");
+            }
+            
             string emailAddress = Request.Form["email"];
             string username = Request.Form["username"];
             string password = Request.Form["password"];
@@ -17,14 +21,22 @@ namespace DevBin.Pages.User {
             Response.ContentType = MediaTypeNames.Application.Json;
 
             if (!DevBin.User.IsEmailValid(emailAddress))
-                return new JsonResult(new API.Response(400, "Invalid email address", false));
+                return new JsonResult(new {
+                    ok = false,
+                    message = "Invalid email address",
+                });
 
             if (!DevBin.User.IsUsernameValid(username))
-                return new JsonResult(new API.Response(400, "Invalid username", false));
+                return new JsonResult(new {
+                    ok = false,
+                    message = "Invalid username",
+                });
 
-            var database = HttpContext.RequestServices.GetService(typeof(Database)) as Database;
-            if (database.FetchUser(emailAddress) != null || database.FetchUser(username) != null) {
-                return new JsonResult(new API.Response(400, "User already exists", false));
+            if (Database.Instance.FetchUser(emailAddress) != null || Database.Instance.FetchUser(username) != null) {
+                return new JsonResult(new {
+                    ok = false,
+                    message = "User already exists",
+                });
             }
 
             string hashedPassword = DevBin.User.Hash(password);
@@ -34,11 +46,14 @@ namespace DevBin.Pages.User {
                 Username = username,
             };
             
-            var user = database.CreateUser(newUser, hashedPassword);
+            var user = Database.Instance.CreateUser(newUser, hashedPassword);
 
-            var token = user.GenerateSessionToken();
+            var token = user?.GenerateSessionToken();
 
-            return new JsonResult(new API.Response(200, token, true));
+            return new JsonResult(new {
+                ok = true,
+                token = token,
+            });
         }
     }
 }

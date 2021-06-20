@@ -14,15 +14,25 @@ namespace DevBin.Pages.User {
         }
 
         public ActionResult OnPost() {
+            if (!Request.HasFormContentType) {
+                return BadRequest("Invalid Content-Type");
+            }
+            
             string loginName = Request.Form["email"];
             string password = Request.Form["password"];
 
             var user = Database.Instance.FetchUser(loginName);
 
             if (user == null || !user.PasswordMatch(password))
-                return new JsonResult(new API.Response(400, "Wrong password or user does not exist", false));
+                return new JsonResult(new {
+                    ok = false,
+                    message = "Wrong password or user does not exist",
+                });
             var token = user.GenerateSessionToken();
-            return new JsonResult(new API.Response(200, token, true));
+            return new JsonResult(new {
+                ok = true,
+                token = token,
+            });
         }
     }
 }
